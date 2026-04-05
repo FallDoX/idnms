@@ -19,7 +19,7 @@ import type { TripEntry, TripSummary, SpeedThreshold } from './types';
 import { 
   Activity, Battery, Gauge, Thermometer, Zap, Clock, TrendingUp, Rocket, 
   Settings, ChevronDown, ChevronUp, Upload, BarChart3, 
-  Eye, EyeOff, Grid3X3, ZoomIn, ZoomOut
+  Eye, EyeOff, Grid3X3, ZoomIn, ZoomOut, Share2
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -119,15 +119,14 @@ function App() {
     distance: true,
     maxPower: true,
     batteryDrop: true,
-    batteryVoltageDrop: true, // New: voltage drop metric
-    maxBatteryDrop: true, // Maximum battery drop during trip
+    batteryVoltageDrop: true,
+    maxBatteryDrop: true,
     avgTemp: true,
-    duration: false,  // Total log time (hidden by default)
-    ridingTime: true, // Time while moving (shown by default)
+    duration: false,
+    ridingTime: true,
     avgSpeed: true,
     avgMovingSpeed: true,
     totalSamples: false,
-    best0to60: false,
     peakAcceleration: true,
     maxTorque: true,
     maxPhaseCurrent: true,
@@ -173,7 +172,6 @@ function App() {
 
   // Data filter state
   const [filterConfig, setFilterConfig] = useState<DataFilterConfig>(defaultFilterConfig);
-  const [filterStats, setFilterStats] = useState<{ removed: number; issues: string[] } | null>(null);
   const [hideIdlePeriods, setHideIdlePeriods] = useState<boolean>(false);
 
   // Filter data by time range AND apply data quality filter AND optionally hide idle periods
@@ -218,13 +216,6 @@ function App() {
         // Keep only if idle period is short
         return idleDuration < IDLE_TIME_THRESHOLD_MS;
       });
-    }
-    
-    // Update filter stats (only when filter is enabled and data changes)
-    if (filterConfig.enabled && result.removed > 0) {
-      setFilterStats({ removed: result.removed, issues: result.issues.slice(0, 5) });
-    } else {
-      setFilterStats(null);
     }
     
     return filtered;
@@ -789,6 +780,116 @@ function App() {
     return `${hours}h ${minutes}m`;
   };
 
+  // Export stats as PNG image
+  const handleShareStats = async () => {
+    if (!filteredSummary) return;
+    
+    // Create a canvas element
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    // Set canvas size
+    canvas.width = 1200;
+    canvas.height = 800;
+    
+    // Fill background
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Add gradient overlay
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, '#1e293b');
+    gradient.addColorStop(1, '#0f172a');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Title
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 32px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Trip Log Statistics', canvas.width / 2, 60);
+    
+    // Filename
+    ctx.font = '18px system-ui, sans-serif';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText(fileName || 'Unknown file', canvas.width / 2, 90);
+    
+    // Stats data
+    const stats = [
+      { label: 'Max Speed', value: `${filteredSummary.maxSpeed.toFixed(1)} km/h`, color: '#3b82f6' },
+      { label: 'Distance', value: `${filteredSummary.totalDistance.toFixed(2)} km`, color: '#10b981' },
+      { label: 'Max Power', value: `${filteredSummary.maxPower.toFixed(0)} W`, color: '#f59e0b' },
+      { label: 'Riding Time', value: formatDuration(filteredSummary.movingDuration), color: '#06b6d4' },
+      { label: 'Avg Speed', value: `${filteredSummary.avgSpeed.toFixed(1)} km/h`, color: '#6366f1' },
+      { label: 'Avg Moving', value: `${filteredSummary.avgMovingSpeed.toFixed(1)} km/h`, color: '#8b5cf6' },
+    ];
+    
+    if (filteredSummary.batteryVoltageDrop !== undefined) {
+      stats.push({ label: 'Voltage Drop', value: `${filteredSummary.batteryVoltageDrop.toFixed(1)} V`, color: '#ec4899' });
+    }
+    
+    if (filteredSummary.maxTorque !== undefined && filteredSummary.maxTorque > 0) {
+      stats.push({ label: 'Max Torque', value: filteredSummary.maxTorque.toFixed(2), color: '#a855f7' });
+    }
+    
+    // Draw stat cards
+    const cardWidth = 300;
+    const cardHeight = 100;
+    const startX = 150;
+    const startY = 140;
+    const gapX = 50;
+    const gapY = 30;
+    
+    stats.forEach((stat, index) => {
+      const row = Math.floor(index / 3);
+      const col = index % 3;
+      const x = startX + col * (cardWidth + gapX);
+      const y = startY + row * (cardHeight + gapY);
+      
+      // Card background
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(x, y, cardWidth, cardHeight, 16);
+      ctx.fill();
+      ctx.stroke();
+      
+      // Gradient accent
+      const cardGradient = ctx.createLinearGradient(x, y, x + cardWidth, y + cardHeight);
+      cardGradient.addColorStop(0, stat.color + '33');
+      cardGradient.addColorStop(1, stat.color + '11');
+      ctx.fillStyle = cardGradient;
+      ctx.beginPath();
+      ctx.roundRect(x, y, cardWidth, cardHeight, 16);
+      ctx.fill();
+      
+      // Label
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '14px system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(stat.label.toUpperCase(), x + 20, y + 30);
+      
+      // Value
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 28px system-ui, sans-serif';
+      ctx.fillText(stat.value, x + 20, y + 65);
+    });
+    
+    // Footer
+    ctx.fillStyle = '#475569';
+    ctx.font = '14px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Generated by Trip Log Analyzer', canvas.width / 2, canvas.height - 40);
+    
+    // Download
+    const link = document.createElement('a');
+    link.download = `trip-stats-${fileName.replace('.csv', '') || 'export'}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  };
+
   return (
     <div
       className={cn(
@@ -897,70 +998,6 @@ function App() {
                       <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
                     </button>
                   ))}
-                </div>
-
-                {/* Data Quality Filter Section */}
-                <div className="mt-6 pt-6 border-t border-white/10">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                      <Activity className="w-4 h-4" />
-                      {i18n.t('dataFilter')}
-                    </h3>
-                    <button
-                      onClick={() => setFilterConfig(prev => ({ ...prev, enabled: !prev.enabled }))}
-                      className={cn(
-                        "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border flex items-center gap-2",
-                        filterConfig.enabled
-                          ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300"
-                          : "bg-white/5 border-white/10 text-slate-500 hover:text-slate-300"
-                      )}
-                    >
-                      {filterConfig.enabled ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                      {filterConfig.enabled ? i18n.t('filterEnabled') : i18n.t('filterDisabled')}
-                    </button>
-                  </div>
-                  
-                  {filterConfig.enabled && filterStats && filterStats.removed > 0 && (
-                    <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-                      <p className="text-sm text-amber-300 font-medium mb-1">
-                        ⚠️ {i18n.t('filteredRecords', { count: filterStats.removed })}
-                      </p>
-                      <ul className="text-xs text-amber-400/80 space-y-0.5">
-                        {filterStats.issues.map((issue, i) => (
-                          <li key={i} className="truncate">• {issue}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  
-                  <p className="text-xs text-slate-500">
-                    {i18n.t('filterDesc')}
-                  </p>
-                </div>
-
-                {/* Hide Idle Periods Toggle */}
-                <div className="mt-6 pt-6 border-t border-white/10">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                      <Clock className="w-4 h-4" />
-                      {i18n.t('hideIdlePeriods')}
-                    </h3>
-                    <button
-                      onClick={() => setHideIdlePeriods(prev => !prev)}
-                      className={cn(
-                        "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border flex items-center gap-2",
-                        hideIdlePeriods
-                          ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300"
-                          : "bg-white/5 border-white/10 text-slate-500 hover:text-slate-300"
-                      )}
-                    >
-                      {hideIdlePeriods ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                      {hideIdlePeriods ? i18n.t('idlePeriodsEnabled') : i18n.t('idlePeriodsDisabled')}
-                    </button>
-                  </div>
-                  <p className="text-xs text-slate-500">
-                    {i18n.t('idlePeriodsDesc')}
-                  </p>
                 </div>
               </div>
             )}
@@ -1159,7 +1196,49 @@ function App() {
                   </div>
 
                   {/* Zoom controls - redesigned for mobile with larger touch targets */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {/* Hide Idle Periods Toggle */}
+                    <button
+                      onClick={() => setHideIdlePeriods(prev => !prev)}
+                      className={cn(
+                        "px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 border flex items-center gap-2",
+                        hideIdlePeriods
+                          ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300"
+                          : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
+                      )}
+                      title={i18n.t('hideIdlePeriods')}
+                    >
+                      <Clock className="w-4 h-4" />
+                      <span className="hidden sm:inline">{hideIdlePeriods ? i18n.t('idlePeriodsEnabled') : i18n.t('idlePeriodsDisabled')}</span>
+                    </button>
+
+                    {/* Data Filter Toggle */}
+                    <button
+                      onClick={() => setFilterConfig(prev => ({ ...prev, enabled: !prev.enabled }))}
+                      className={cn(
+                        "px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 border flex items-center gap-2",
+                        filterConfig.enabled
+                          ? "bg-amber-500/20 border-amber-500/50 text-amber-300"
+                          : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
+                      )}
+                      title={i18n.t('dataFilter')}
+                    >
+                      <Activity className="w-4 h-4" />
+                      <span className="hidden sm:inline">{filterConfig.enabled ? i18n.t('filterEnabled') : i18n.t('filterDisabled')}</span>
+                    </button>
+
+                    {/* Share Button */}
+                    <button
+                      onClick={handleShareStats}
+                      className="px-3 py-2 bg-purple-500/20 hover:bg-purple-500/30 rounded-xl border border-purple-500/30 transition-all duration-200 flex items-center gap-2 text-purple-300"
+                      title="Поделиться статистикой"
+                    >
+                      <Share2 className="w-4 h-4" />
+                      <span className="hidden sm:inline">Поделиться</span>
+                    </button>
+
+                    <div className="w-px h-8 bg-white/10 mx-1" />
+
                     {/* Chart View Toggle */}
                     <button
                       onClick={() => setChartView(chartView === 'line' ? 'scatter' : 'line')}
