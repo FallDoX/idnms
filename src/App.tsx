@@ -1514,11 +1514,23 @@ function App() {
                         ? (result.time < 1 ? `${(result.time * 1000).toFixed(0)} мс` : `${result.time.toFixed(2)} с`)
                         : '—';
                       return (
-                        <div key={t.id} className="flex items-center justify-between text-sm border-b border-white/5 pb-1.5 last:border-0 last:pb-0">
-                          <span className="text-white/70 font-medium">{t.label}:</span>
-                          <div className="text-right flex items-center gap-3">
-                            <span className="font-bold text-white text-base">{result.bestRun.peakAcceleration.toFixed(2)} <span className="text-white/60 text-xs">м/с²</span></span>
-                            <span className="font-bold text-amber-400 text-lg">{timeStr}</span>
+                        <div key={t.id} className="flex flex-col border-b border-white/5 pb-2 last:border-0 last:pb-0 gap-1">
+                          {/* Mobile: stacked layout */}
+                          <div className="flex items-center justify-between sm:hidden">
+                            <span className="text-white/70 font-medium text-sm">{t.label}</span>
+                            <span className="font-bold text-amber-400 text-base">{timeStr}</span>
+                          </div>
+                          <div className="flex items-center justify-between sm:hidden">
+                            <span className="text-white/50 text-xs">Пиковое ускорение</span>
+                            <span className="font-bold text-white text-sm">{result.bestRun.peakAcceleration.toFixed(2)} <span className="text-white/60 text-xs">м/с²</span></span>
+                          </div>
+                          {/* Desktop: inline layout */}
+                          <div className="hidden sm:flex sm:items-center sm:justify-between text-sm">
+                            <span className="text-white/70 font-medium">{t.label}:</span>
+                            <div className="flex items-center gap-3">
+                              <span className="font-bold text-white">{result.bestRun.peakAcceleration.toFixed(2)} <span className="text-white/60 text-xs">м/с²</span></span>
+                              <span className="font-bold text-amber-400 text-lg min-w-[60px] text-right">{timeStr}</span>
+                            </div>
                           </div>
                         </div>
                       );
