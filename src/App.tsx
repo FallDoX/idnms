@@ -1597,8 +1597,8 @@ function App() {
                         )}
                       >
                         <Clock className="w-4 h-4" />
-                        <span className="hidden sm:inline">Скрыть простои</span>
-                        <span className="sm:hidden">{hideIdlePeriods ? 'Вкл' : 'Выкл'}</span>
+                        <span className="hidden sm:inline">{i18n.t('hideIdlePeriods')}</span>
+                        <span className="sm:hidden">{hideIdlePeriods ? i18n.t('on') : i18n.t('off')}</span>
                       </button>
                       {/* Tooltip positioned to the RIGHT of button */}
                       <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 w-[260px] bg-slate-900/95 backdrop-blur-xl rounded-xl border border-emerald-500/30 shadow-2xl shadow-emerald-500/10 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-50 overflow-hidden max-h-[400px] overflow-y-auto">
@@ -1665,8 +1665,8 @@ function App() {
                         )}
                       >
                         <Activity className="w-4 h-4" />
-                        <span className="hidden sm:inline">Фильтр данных</span>
-                        <span className="sm:hidden">{filterConfig.enabled ? 'Вкл' : 'Выкл'}</span>
+                        <span className="hidden sm:inline">{i18n.t('dataFilter')}</span>
+                        <span className="sm:hidden">{filterConfig.enabled ? i18n.t('on') : i18n.t('off')}</span>
                       </button>
                       {/* Tooltip positioned to the RIGHT of button */}
                       <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 w-[280px] bg-slate-900/95 backdrop-blur-xl rounded-xl border border-amber-500/30 shadow-2xl shadow-amber-500/10 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-50 overflow-hidden max-h-[450px] overflow-y-auto">
@@ -1814,10 +1814,10 @@ function App() {
                           ? "bg-indigo-500/30 border-indigo-500/60 text-indigo-200 shadow-lg shadow-indigo-500/20"
                           : "bg-slate-800/80 border-slate-600 text-slate-300 hover:bg-slate-700/80"
                       )}
-                      title={showFloatingPanel ? "Плавающая панель включена" : "Плавающая панель выключена"}
+                      title={showFloatingPanel ? i18n.t('tooltipFloatingPanel') : i18n.t('tooltipFloatingPanel')}
                     >
                       <Grid3X3 className="w-4 h-4" />
-                      <span className="hidden sm:inline">{showFloatingPanel ? 'Панель ON' : 'Панель OFF'}</span>
+                      <span className="hidden sm:inline">{showFloatingPanel ? i18n.t('panelOn') : i18n.t('panelOff')}</span>
                     </button>
 
                     <div className="w-px h-8 bg-white/10 mx-1" />
@@ -1831,13 +1831,13 @@ function App() {
                           ? "bg-cyan-500/30 border-cyan-500/60 text-cyan-200 shadow-lg shadow-cyan-500/20"
                           : "bg-slate-800/80 border-slate-600 text-slate-300 hover:bg-slate-700/80"
                       )}
-                      title={chartSnapMode ? "Прилипание к точкам включено" : "Прилипание к точкам выключено"}
+                      title={chartSnapMode ? i18n.t('snapOn') : i18n.t('snapOff')}
                     >
                       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <circle cx="12" cy="12" r="3" />
                         <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
                       </svg>
-                      <span className="hidden sm:inline">{chartSnapMode ? 'Snap ON' : 'Snap OFF'}</span>
+                      <span className="hidden sm:inline">{chartSnapMode ? i18n.t('snapOn') : i18n.t('snapOff')}</span>
                     </button>
 
                     {/* Chart View Toggle */}

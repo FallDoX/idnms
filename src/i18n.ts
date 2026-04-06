@@ -90,6 +90,57 @@ export const translations = {
 
     // File
     uploadError: 'Please upload a CSV file',
+
+    // New UI Elements
+    hideIdlePeriodsTitle: 'Hide Idle Periods',
+    dataFilterTitle: 'Data Filter',
+    shareTitle: 'Share',
+    floatingPanelTitle: 'Floating Panel',
+    snapModeTitle: 'Snap Mode',
+    panelOn: 'Panel ON',
+    panelOff: 'Panel OFF',
+    snapOn: 'Snap ON',
+    snapOff: 'Snap OFF',
+    enabled: 'Enabled',
+    disabled: 'Disabled',
+    on: 'ON',
+    off: 'OFF',
+
+    // Tooltips
+    tooltipIdlePeriods: 'Removes idle periods from the chart',
+    tooltipDataFilter: 'Removes data anomalies (configurable)',
+    tooltipShare: 'Screenshot of the entire page',
+    tooltipFloatingPanel: 'Toggle floating data panel',
+    tooltipSnapMode: 'Snap to data points on hover',
+    tooltipZoomIn: 'Zoom In',
+    tooltipResetZoom: 'Reset Zoom',
+
+    // Data Panel
+    dataPanelTitle: 'Data Panel',
+    noData: 'No data',
+    locked: 'LOCKED',
+    unlock: 'Unlock',
+    lock: 'Lock',
+
+    // Messages
+    noDataToSave: 'No data to save. Please upload a CSV file.',
+    exportContainerNotFound: 'Export container not found',
+    screenshotError: 'Error creating screenshot',
+    demoLoadError: 'Error loading demo file',
+
+    // Units and labels
+    ms: 'ms',
+    sec: 's',
+    ms2: 'm/s²',
+    kmh: 'km/h',
+    watt: 'W',
+    amp: 'A',
+    volt: 'V',
+    percent: '%',
+    celsius: '°C',
+    km: 'km',
+    wh: 'Wh',
+    whkm: 'Wh/km',
   },
   ru: {
     // Header
@@ -180,6 +231,57 @@ export const translations = {
 
     // File
     uploadError: 'Пожалуйста, загрузите CSV файл',
+
+    // New UI Elements
+    hideIdlePeriodsTitle: 'Скрыть простои',
+    dataFilterTitle: 'Фильтр данных',
+    shareTitle: 'Поделиться',
+    floatingPanelTitle: 'Плавающая панель',
+    snapModeTitle: 'Прилипание к точкам',
+    panelOn: 'Панель ВКЛ',
+    panelOff: 'Панель ВЫКЛ',
+    snapOn: 'Snap ВКЛ',
+    snapOff: 'Snap ВЫКЛ',
+    enabled: 'Вкл',
+    disabled: 'Выкл',
+    on: 'ВКЛ',
+    off: 'ВЫКЛ',
+
+    // Tooltips
+    tooltipIdlePeriods: 'Убирает из графика периоды стоянки',
+    tooltipDataFilter: 'Удаляет аномалии (настраивается)',
+    tooltipShare: 'Скриншот всей страницы',
+    tooltipFloatingPanel: 'Вкл/выкл плавающую панель',
+    tooltipSnapMode: 'Прилипать к точкам при наведении',
+    tooltipZoomIn: 'Приблизить',
+    tooltipResetZoom: 'Сбросить зум',
+
+    // Data Panel
+    dataPanelTitle: 'Панель данных',
+    noData: 'Нет данных',
+    locked: 'ЗАМОК',
+    unlock: 'Разморозить',
+    lock: 'Заморозить',
+
+    // Messages
+    noDataToSave: 'Нет данных для сохранения. Загрузите CSV файл.',
+    exportContainerNotFound: 'Не найден контейнер для экспорта',
+    screenshotError: 'Ошибка создания скриншота',
+    demoLoadError: 'Ошибка загрузки демо файла',
+
+    // Units and labels
+    ms: 'мс',
+    sec: 'с',
+    ms2: 'м/с²',
+    kmh: 'км/ч',
+    watt: 'Вт',
+    amp: 'А',
+    volt: 'В',
+    percent: '%',
+    celsius: '°C',
+    km: 'км',
+    wh: 'Втч',
+    whkm: 'Втч/км',
   }
 };
 
