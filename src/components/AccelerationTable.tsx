@@ -483,7 +483,7 @@ export function AccelerationTable({ data, thresholds, onThresholdsChange }: Acce
                     
                     {/* Data overlay - time and acceleration */}
                     {time !== null && (
-                      <div className="absolute left-3 right-3 flex items-center justify-between z-10">
+                      <div className="absolute left-3 right-16 flex items-center justify-between z-10">
                         <div className={cn(
                           "flex items-center gap-1.5 px-2 py-1 rounded-full text-sm font-bold backdrop-blur-sm shadow-lg",
                           isBest 
