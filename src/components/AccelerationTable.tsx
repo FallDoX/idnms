@@ -460,6 +460,26 @@ export function AccelerationTable({ data, thresholds, onThresholdsChange }: Acce
                     {/* Background track */}
                     <div className="absolute inset-x-2 h-3 bg-slate-800/50 rounded-full" />
                     
+                    {/* Start and end markers for threshold range */}
+                    <div 
+                      className="absolute h-4 w-0.5 bg-white/40 rounded-full z-5"
+                      style={{ 
+                        left: `calc(8px + ((threshold.startValue ?? 0) / 200) * (100% - 16px))`,
+                        top: '50%',
+                        transform: 'translateY(-50%)'
+                      }}
+                      title={`Начало: ${threshold.startValue ?? 0} км/ч`}
+                    />
+                    <div 
+                      className="absolute h-4 w-0.5 bg-white/40 rounded-full z-5"
+                      style={{ 
+                        left: `calc(8px + (threshold.value / 200) * (100% - 16px))`,
+                        top: '50%',
+                        transform: 'translateY(-50%)'
+                      }}
+                      title={`Конец: ${threshold.value} км/ч`}
+                    />
+                    
                     {/* Progress bar with gradient based on intensity */}
                     {time !== null && (
                       <>
