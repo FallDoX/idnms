@@ -255,15 +255,6 @@ export const AccelerationTab = memo(({
           <Line data={accelerationChartData} options={chartOptions} />
         </div>
       )}
-
-      {/* Table */}
-      <AccelerationTable
-        accelerationAttempts={accelerationAttempts}
-        showIncomplete={showIncomplete}
-        selectedColumns={selectedColumns}
-        onShowIncompleteToggle={onShowIncompleteToggle}
-        onColumnToggle={onColumnToggle}
-      />
     </div>
   );
 });
