@@ -1298,9 +1298,9 @@ function App() {
                                   </div>
                                   <input
                                     type="range"
-                                    min="100"
+                                    min="10"
                                     max="500"
-                                    step="10"
+                                    step="5"
                                     value={filterConfig.gpsTeleportSpeedKmh}
                                     onChange={(e) => setFilterConfig(prev => ({ ...prev, gpsTeleportSpeedKmh: parseInt(e.target.value) }))}
                                     className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500"
