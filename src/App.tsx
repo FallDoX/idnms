@@ -224,9 +224,28 @@ function App() {
         }
         next.add(attemptIndex);
       }
+
+      // Update floating panel with attempt metrics in acceleration mode
+      if (chartMode === 'acceleration' && accelerationAttempts[attemptIndex]) {
+        const attempt = accelerationAttempts[attemptIndex];
+        setFloatingPanelData([
+          { label: 'Пиковая мощность', value: attempt.peakPower, color: '#f59e0b', unit: 'W' },
+          { label: 'Средняя мощность', value: attempt.averagePower, color: '#f97316', unit: 'W' },
+          { label: 'Расстояние', value: attempt.distance, color: '#10b981', unit: 'm' },
+          { label: 'Падение батареи', value: attempt.batteryDrop, color: '#ec4899', unit: '%' },
+          { label: 'Время', value: attempt.time, color: '#3b82f6', unit: 's' },
+        ]);
+        setFloatingPanelTimestamp('');
+        setFloatingPanelAttemptInfo({
+          attemptNumber: attemptIndex + 1,
+          speedRange: `${attempt.startSpeed}-${attempt.endSpeed} км/ч`
+        });
+        setShowFloatingPanel(true);
+      }
+
       return next;
     });
-  }, []);
+  }, [chartMode, accelerationAttempts]);
 
   // Chart state from custom hook
   const {
@@ -254,6 +273,7 @@ function App() {
   const [floatingPanelPosition, setFloatingPanelPosition] = useState<{ x: number; y: number }>({ x: window.innerWidth * 0.65, y: 200 });
   const [floatingPanelData, setFloatingPanelData] = useState<{ label: string; value: number | null; color: string; unit?: string }[]>([]);
   const [floatingPanelTimestamp, setFloatingPanelTimestamp] = useState<string>('');
+  const [floatingPanelAttemptInfo, setFloatingPanelAttemptInfo] = useState<{ attemptNumber: number; speedRange: string } | undefined>(undefined);
   const floatingPanelDataRef = useRef(floatingPanelData);
   floatingPanelDataRef.current = floatingPanelData;
   const [filterConfig, setFilterConfig] = useState<DataFilterConfig>(defaultFilterConfig);
@@ -1532,6 +1552,7 @@ function App() {
                           // Clear selection when switching to telemetry
                           if (newMode === 'telemetry') {
                             setSelectedAttempts(new Set());
+                            setFloatingPanelAttemptInfo(undefined);
                           }
                           // Auto-select first attempt when switching to acceleration if no attempts selected
                           if (newMode === 'acceleration' && selectedAttempts.size === 0 && accelerationAttempts.length > 0) {
@@ -1882,6 +1903,7 @@ function App() {
               onPositionChange={setFloatingPanelPosition}
               isFrozen={floatingPanelFrozen}
               onToggleFreeze={() => setFloatingPanelFrozen(prev => !prev)}
+              attemptInfo={floatingPanelAttemptInfo}
             />
           </>
         ) : (
