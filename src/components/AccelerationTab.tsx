@@ -35,11 +35,24 @@ interface AccelerationTabProps {
   onShowIncompleteToggle: () => void;
   onColumnToggle: (column: string) => void;
   data: TripEntry[];
+  fromSpeed: number;
+  toSpeed: number;
 }
 
-const ATTEMPT_COLORS = [
-  '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-  '#ec4899', '#f97316', '#06b6d4', '#a78bfa', '#fb923c'
+const PRESET_COLORS = {
+  '0-25': '#3b82f6',
+  '0-60': '#10b981',
+  '0-90': '#f59e0b',
+  '0-100': '#ef4444',
+  'custom': '#8b5cf6',
+};
+
+const PRESETS = [
+  { id: '0-25', from: 0, to: 25, label: '0-25' },
+  { id: '0-60', from: 0, to: 60, label: '0-60' },
+  { id: '0-90', from: 0, to: 90, label: '0-90' },
+  { id: '0-100', from: 0, to: 100, label: '0-100' },
+  { id: 'custom', from: -1, to: -1, label: 'Настроить' },
 ];
 
 export const AccelerationTab = memo(({
@@ -49,46 +62,84 @@ export const AccelerationTab = memo(({
   onShowIncompleteToggle,
   onColumnToggle,
   data,
+  fromSpeed,
+  toSpeed,
 }: AccelerationTabProps) => {
-  const [selectedAttempts, setSelectedAttempts] = useState<Set<number>>(new Set());
+  const [selectedPresets, setSelectedPresets] = useState<Set<string>>(new Set());
 
-  const toggleAttempt = (attemptIndex: number) => {
-    setSelectedAttempts(prev => {
+  const togglePreset = (presetId: string) => {
+    setSelectedPresets(prev => {
       const next = new Set(prev);
-      if (next.has(attemptIndex)) {
-        next.delete(attemptIndex);
+      if (next.has(presetId)) {
+        next.delete(presetId);
       } else {
-        if (next.size >= 10) {
-          alert('Максимум 10 попыток для отображения');
-          return prev;
-        }
-        next.add(attemptIndex);
+        next.add(presetId);
       }
       return next;
     });
   };
 
   const accelerationChartData = useMemo(() => {
-    const datasets = accelerationAttempts
-      .filter((_, index) => selectedAttempts.has(index))
-      .map((attempt, index) => {
+    const datasets: Array<{
+      label: string;
+      data: Array<{ x: number; y: number }>;
+      borderColor: string;
+      backgroundColor: string;
+      fill: boolean;
+      tension: number;
+      pointRadius: number;
+    }> = [];
+
+    selectedPresets.forEach(presetId => {
+      const preset = PRESETS.find(p => p.id === presetId);
+      if (!preset || preset.id === 'custom') return;
+
+      const presetAttempts = accelerationAttempts.filter(
+        attempt => attempt.startSpeed === preset.from && attempt.endSpeed === preset.to
+      );
+
+      presetAttempts.forEach((attempt, index) => {
         const attemptData = data.filter(
           e => e.timestamp >= attempt.startTimestamp && e.timestamp <= attempt.endTimestamp
         );
 
-        return {
-          label: `Попытка ${index + 1} (${attempt.startSpeed}-${attempt.endSpeed} км/ч)`,
+        datasets.push({
+          label: `${preset.label} #${index + 1}`,
           data: attemptData.map(e => ({ x: e.timestamp, y: e.Speed })),
-          borderColor: ATTEMPT_COLORS[index % ATTEMPT_COLORS.length],
-          backgroundColor: `${ATTEMPT_COLORS[index % ATTEMPT_COLORS.length]}20`,
+          borderColor: PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS],
+          backgroundColor: `${PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS]}20`,
           fill: false,
           tension: 0.1,
           pointRadius: 0,
-        };
+        });
       });
+    });
+
+    // Add custom preset if selected
+    if (selectedPresets.has('custom') && fromSpeed >= 0 && toSpeed >= 0) {
+      const customAttempts = accelerationAttempts.filter(
+        attempt => attempt.startSpeed === fromSpeed && attempt.endSpeed === toSpeed
+      );
+
+      customAttempts.forEach((attempt, index) => {
+        const attemptData = data.filter(
+          e => e.timestamp >= attempt.startTimestamp && e.timestamp <= attempt.endTimestamp
+        );
+
+        datasets.push({
+          label: `${fromSpeed}-${toSpeed} #${index + 1}`,
+          data: attemptData.map(e => ({ x: e.timestamp, y: e.Speed })),
+          borderColor: PRESET_COLORS.custom,
+          backgroundColor: `${PRESET_COLORS.custom}20`,
+          fill: false,
+          tension: 0.1,
+          pointRadius: 0,
+        });
+      });
+    }
 
     return { datasets };
-  }, [accelerationAttempts, selectedAttempts, data]);
+  }, [accelerationAttempts, selectedPresets, data, fromSpeed, toSpeed]);
 
   const chartOptions = {
     responsive: true,
@@ -152,28 +203,33 @@ export const AccelerationTab = memo(({
 
   return (
     <div className="space-y-4">
-      {/* Attempt selector */}
+      {/* Preset selector */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs text-slate-400 font-medium">Выберите попытки для графика:</span>
+        <span className="text-xs text-slate-400 font-medium">Выберите диапазоны для графика:</span>
         <div className="flex flex-wrap gap-2">
-          {accelerationAttempts.map((attempt, index) => (
+          {PRESETS.map((preset) => (
             <button
-              key={attempt.id}
-              onClick={() => toggleAttempt(index)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                selectedAttempts.has(index)
-                  ? `${ATTEMPT_COLORS[index % ATTEMPT_COLORS.length]}20 border ${ATTEMPT_COLORS[index % ATTEMPT_COLORS.length]}50 text-white`
+              key={preset.id}
+              onClick={() => togglePreset(preset.id)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+                selectedPresets.has(preset.id)
+                  ? `${PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS]}20 border ${PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS]}50 text-white`
                   : 'bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700'
               }`}
             >
-              #{index + 1} ({attempt.startSpeed}-{attempt.endSpeed})
+              {preset.label}
             </button>
           ))}
         </div>
+        {selectedPresets.has('custom') && (
+          <span className="text-xs text-slate-500">
+            (настроено: {fromSpeed}-{toSpeed} км/ч)
+          </span>
+        )}
       </div>
 
       {/* Chart */}
-      {selectedAttempts.size > 0 && (
+      {selectedPresets.size > 0 && (
         <div className="bg-slate-900/50 backdrop-blur-sm rounded-xl border border-white/10 p-4 h-[400px]">
           <Line data={accelerationChartData} options={chartOptions} />
         </div>

@@ -1422,6 +1422,8 @@ function App() {
                             });
                           }}
                           data={data}
+                          fromSpeed={fromSpeed}
+                          toSpeed={toSpeed}
                         />
                       </TabsContent>
                     </Tabs>
