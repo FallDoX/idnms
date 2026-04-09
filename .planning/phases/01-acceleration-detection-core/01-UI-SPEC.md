@@ -1,10 +1,11 @@
 ---
 phase: 1
 slug: acceleration-detection-core
-status: draft
+status: approved
 shadcn_initialized: true
 preset: radix-mira
 created: 2026-04-09
+reviewed_at: 2026-04-09
 ---
 
 # Phase 1 — UI Design Contract
