@@ -18,7 +18,6 @@ import { detectAccelerations } from './utils/acceleration';
 import type { TripEntry, TripSummary, AccelerationAttempt } from './types';
 import { AccelerationTab } from './components/AccelerationTab';
 import AccelerationConfig from './components/AccelerationConfig';
-import AttemptButton from './components/AttemptButton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Activity, Clock, Settings, Eye, EyeOff, Grid3X3, ZoomIn, ZoomOut, Share2, Play, Upload, BarChart
@@ -1543,18 +1542,17 @@ function App() {
                     </div>
                   </div>
 
-                  {/* Mode toggle button */}
-                  <div className="flex items-center gap-2 px-2 py-1 bg-slate-800/50 rounded-lg border border-white/5">
+                  {/* Compact mode toggle with attempt selector */}
+                  <div className="flex items-center gap-2">
+                    {/* Mode toggle */}
                     <button
                       onClick={() => {
                         setChartMode(prev => {
                           const newMode = prev === 'telemetry' ? 'acceleration' : 'telemetry';
-                          // Clear selection when switching to telemetry
                           if (newMode === 'telemetry') {
                             setSelectedAttempts(new Set());
                             setFloatingPanelAttemptInfo(undefined);
                           }
-                          // Auto-select first attempt when switching to acceleration if no attempts selected
                           if (newMode === 'acceleration' && selectedAttempts.size === 0 && accelerationAttempts.length > 0) {
                             setSelectedAttempts(new Set([0]));
                           }
@@ -1562,14 +1560,75 @@ function App() {
                         });
                       }}
                       className={cn(
-                        "px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
+                        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border",
                         chartMode === 'acceleration'
                           ? "bg-blue-500/20 border-blue-500/40 text-blue-200"
                           : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
                       )}
+                      title={chartMode === 'acceleration' ? 'Переключить на телеметрию' : 'Переключить на ускорение'}
                     >
-                      Ускорение
+                      <BarChart className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Ускорение</span>
                     </button>
+
+                    {/* Attempt selector dropdown - only in acceleration mode */}
+                    {chartMode === 'acceleration' && accelerationAttempts.length > 0 && (
+                      <div className="relative group">
+                        <button
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-700/50 border border-slate-600 text-slate-300 hover:bg-slate-700 transition-all"
+                          title="Выбрать попытки"
+                        >
+                          <span className="hidden sm:inline">Попытки</span>
+                          <span className="bg-blue-500/20 text-blue-200 px-1.5 py-0.5 rounded text-[10px]">
+                            {selectedAttempts.size}/{accelerationAttempts.length}
+                          </span>
+                        </button>
+
+                        {/* Dropdown menu */}
+                        <div className="absolute top-full right-0 mt-1 w-48 bg-slate-900/95 backdrop-blur-xl rounded-lg border border-white/10 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 max-h-64 overflow-y-auto">
+                          <div className="p-1.5 space-y-0.5">
+                            <button
+                              onClick={() => {
+                                setSelectedAttempts(new Set());
+                              }}
+                              className="w-full text-left px-2 py-1.5 text-xs text-slate-400 hover:bg-slate-800 rounded transition-colors"
+                            >
+                              Очистить выбор
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedAttempts(new Set(accelerationAttempts.map((_, i) => i)));
+                              }}
+                              className="w-full text-left px-2 py-1.5 text-xs text-slate-400 hover:bg-slate-800 rounded transition-colors"
+                            >
+                              Выбрать все
+                            </button>
+                            <div className="border-t border-white/10 my-1" />
+                            {accelerationAttempts.map((attempt, index) => (
+                              <button
+                                key={attempt.id}
+                                onClick={() => toggleAttempt(index)}
+                                className={cn(
+                                  "w-full text-left px-2 py-1.5 text-xs rounded transition-colors flex items-center gap-2",
+                                  selectedAttempts.has(index)
+                                    ? "bg-blue-500/20 text-blue-200"
+                                    : "text-slate-400 hover:bg-slate-800"
+                                )}
+                              >
+                                <div
+                                  className={cn(
+                                    "w-2 h-2 rounded-full",
+                                    selectedAttempts.has(index) ? "bg-blue-400" : "bg-slate-600"
+                                  )}
+                                />
+                                <span>#{index + 1}</span>
+                                <span className="text-slate-500">({attempt.startSpeed}-{attempt.endSpeed})</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Toggle chips - telemetry mode */}
@@ -1592,22 +1651,6 @@ function App() {
                         <ToggleChip label={i18n.t('torque')} active={chartToggles.torque} onClick={() => setChartToggles(p => ({...p, torque: !p.torque}))} color="purple" />
                       )}
                       <ToggleChip label={i18n.t('pwm')} active={chartToggles.pwm} onClick={() => setChartToggles(p => ({...p, pwm: !p.pwm}))} color="blue" />
-                    </div>
-                  )}
-
-                  {/* Attempt buttons - acceleration mode */}
-                  {chartMode === 'acceleration' && (
-                    <div className="flex flex-wrap gap-2 overflow-x-auto pb-1">
-                      {accelerationAttempts.map((attempt, index) => (
-                        <AttemptButton
-                          key={attempt.id}
-                          attempt={attempt}
-                          index={index}
-                          selected={selectedAttempts.has(index)}
-                          onSelect={toggleAttempt}
-                          color={ATTEMPT_COLORS[index % ATTEMPT_COLORS.length]}
-                        />
-                      ))}
                     </div>
                   )}
 
