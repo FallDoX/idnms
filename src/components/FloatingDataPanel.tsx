@@ -23,17 +23,22 @@ interface FloatingDataPanelProps {
   onPositionChange: (pos: { x: number; y: number }) => void;
   isFrozen: boolean;
   onToggleFreeze: () => void;
+  attemptInfo?: {
+    attemptNumber: number;
+    speedRange: string;
+  };
 }
 
-export function FloatingDataPanel({ 
-  data, 
-  timestamp, 
-  isVisible, 
-  onClose, 
-  position, 
+export function FloatingDataPanel({
+  data,
+  timestamp,
+  isVisible,
+  onClose,
+  position,
   onPositionChange,
   isFrozen,
-  onToggleFreeze
+  onToggleFreeze,
+  attemptInfo
 }: FloatingDataPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -102,10 +107,19 @@ export function FloatingDataPanel({
             "w-4 h-4",
             isFrozen ? "text-amber-400" : "text-slate-400"
           )} />
-          <span className={cn(
-            "text-xs font-semibold",
-            isFrozen ? "text-amber-200" : "text-slate-200"
-          )}>{timestamp}</span>
+          {attemptInfo ? (
+            <span className={cn(
+              "text-xs font-semibold",
+              isFrozen ? "text-amber-200" : "text-slate-200"
+            )}>
+              Попытка {attemptInfo.attemptNumber} ({attemptInfo.speedRange})
+            </span>
+          ) : (
+            <span className={cn(
+              "text-xs font-semibold",
+              isFrozen ? "text-amber-200" : "text-slate-200"
+            )}>{timestamp}</span>
+          )}
           {isFrozen && (
             <span className="text-[10px] px-1.5 py-0.5 bg-amber-500/20 text-amber-300 rounded">
               LOCKED
