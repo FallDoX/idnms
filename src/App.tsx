@@ -204,48 +204,6 @@ function App() {
   // Tab state
   const [activeTab, setActiveTab] = useState<'charts' | 'acceleration'>('charts');
 
-  // Chart mode state
-  const [chartMode, setChartMode] = useState<'telemetry' | 'acceleration'>('telemetry');
-
-  // Attempt selection state
-  const [selectedAttempts, setSelectedAttempts] = useState<Set<number>>(new Set());
-
-  const toggleAttempt = useCallback((attemptIndex: number) => {
-    setSelectedAttempts(prev => {
-      const next = new Set(prev);
-      if (next.has(attemptIndex)) {
-        next.delete(attemptIndex);
-      } else {
-        // Limit selection to 10 attempts
-        if (next.size >= 10) {
-          alert('Максимум 10 попыток для отображения');
-          return prev;
-        }
-        next.add(attemptIndex);
-      }
-
-      // Update floating panel with attempt metrics in acceleration mode
-      if (chartMode === 'acceleration' && accelerationAttempts[attemptIndex]) {
-        const attempt = accelerationAttempts[attemptIndex];
-        setFloatingPanelData([
-          { label: 'Пиковая мощность', value: attempt.peakPower, color: '#f59e0b', unit: 'W' },
-          { label: 'Средняя мощность', value: attempt.averagePower, color: '#f97316', unit: 'W' },
-          { label: 'Расстояние', value: attempt.distance, color: '#10b981', unit: 'm' },
-          { label: 'Падение батареи', value: attempt.batteryDrop, color: '#ec4899', unit: '%' },
-          { label: 'Время', value: attempt.time, color: '#3b82f6', unit: 's' },
-        ]);
-        setFloatingPanelTimestamp('');
-        setFloatingPanelAttemptInfo({
-          attemptNumber: attemptIndex + 1,
-          speedRange: `${attempt.startSpeed}-${attempt.endSpeed} км/ч`
-        });
-        setShowFloatingPanel(true);
-      }
-
-      return next;
-    });
-  }, [chartMode, accelerationAttempts]);
-
   // Chart state from custom hook
   const {
     chartToggles,
@@ -272,7 +230,6 @@ function App() {
   const [floatingPanelPosition, setFloatingPanelPosition] = useState<{ x: number; y: number }>({ x: window.innerWidth * 0.65, y: 200 });
   const [floatingPanelData, setFloatingPanelData] = useState<{ label: string; value: number | null; color: string; unit?: string }[]>([]);
   const [floatingPanelTimestamp, setFloatingPanelTimestamp] = useState<string>('');
-  const [floatingPanelAttemptInfo, setFloatingPanelAttemptInfo] = useState<{ attemptNumber: number; speedRange: string } | undefined>(undefined);
   const floatingPanelDataRef = useRef(floatingPanelData);
   floatingPanelDataRef.current = floatingPanelData;
   const [filterConfig, setFilterConfig] = useState<DataFilterConfig>(defaultFilterConfig);
@@ -872,43 +829,8 @@ function App() {
     return datasets;
   }, [displayData, hideIdlePeriods, compressedTimeRange, activePeriods]);
 
-  // Acceleration chart data - computes datasets from selected attempts
-  const ATTEMPT_COLORS = [
-    '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-    '#ec4899', '#f97316', '#06b6d4', '#a78bfa', '#fb923c'
-  ];
-
-  const accelerationChartData = useMemo(() => {
-    const datasets = accelerationAttempts
-      .filter((_, index) => selectedAttempts.has(index))
-      .map((attempt, index) => {
-        // Filter data for this attempt's time range
-        const attemptData = data.filter(
-          e => e.timestamp >= attempt.startTimestamp && e.timestamp <= attempt.endTimestamp
-        );
-
-        return {
-          label: `Attempt ${index + 1} (${attempt.startSpeed}-${attempt.endSpeed} км/ч)`,
-          data: attemptData.map(e => ({ x: e.timestamp, y: e.Speed })),
-          borderColor: ATTEMPT_COLORS[index % ATTEMPT_COLORS.length],
-          backgroundColor: `${ATTEMPT_COLORS[index % ATTEMPT_COLORS.length]}20`,
-          fill: false,
-          tension: 0.1,
-          pointRadius: 0,
-        };
-      });
-
-    return { datasets };
-  }, [accelerationAttempts, selectedAttempts, data]);
-
   // Combined chart data with toggles - only constructs final datasets object
   const combinedChartData = useMemo(() => {
-    // Return acceleration data in acceleration mode
-    if (chartMode === 'acceleration') {
-      return accelerationChartData;
-    }
-
-    // Return telemetry data in telemetry mode (existing implementation)
     const datasets: Array<{
       label: string;
       data: Array<{ x: number; y: number | null | undefined }>;
@@ -1037,7 +959,7 @@ function App() {
     }
 
     return { datasets };
-  }, [chartMode, chartDatasets, chartToggles, displayData, accelerationChartData]);
+  }, [chartDatasets, chartToggles, displayData]);
 
   // Export full page as PNG image using html-to-image
   const handleShareStats = async () => {
@@ -1542,117 +1464,26 @@ function App() {
                     </div>
                   </div>
 
-                  {/* Compact mode toggle with attempt selector */}
-                  <div className="flex items-center gap-2">
-                    {/* Mode toggle */}
-                    <button
-                      onClick={() => {
-                        setChartMode(prev => {
-                          const newMode = prev === 'telemetry' ? 'acceleration' : 'telemetry';
-                          if (newMode === 'telemetry') {
-                            setSelectedAttempts(new Set());
-                            setFloatingPanelAttemptInfo(undefined);
-                          }
-                          if (newMode === 'acceleration' && selectedAttempts.size === 0 && accelerationAttempts.length > 0) {
-                            setSelectedAttempts(new Set([0]));
-                          }
-                          return newMode;
-                        });
-                      }}
-                      className={cn(
-                        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border",
-                        chartMode === 'acceleration'
-                          ? "bg-blue-500/20 border-blue-500/40 text-blue-200"
-                          : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
-                      )}
-                      title={chartMode === 'acceleration' ? 'Переключить на телеметрию' : 'Переключить на ускорение'}
-                    >
-                      <BarChart className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">Ускорение</span>
-                    </button>
-
-                    {/* Attempt selector dropdown - only in acceleration mode */}
-                    {chartMode === 'acceleration' && accelerationAttempts.length > 0 && (
-                      <div className="relative group">
-                        <button
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-700/50 border border-slate-600 text-slate-300 hover:bg-slate-700 transition-all"
-                          title="Выбрать попытки"
-                        >
-                          <span className="hidden sm:inline">Попытки</span>
-                          <span className="bg-blue-500/20 text-blue-200 px-1.5 py-0.5 rounded text-[10px]">
-                            {selectedAttempts.size}/{accelerationAttempts.length}
-                          </span>
-                        </button>
-
-                        {/* Dropdown menu */}
-                        <div className="absolute top-full right-0 mt-1 w-48 bg-slate-900/95 backdrop-blur-xl rounded-lg border border-white/10 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 max-h-64 overflow-y-auto">
-                          <div className="p-1.5 space-y-0.5">
-                            <button
-                              onClick={() => {
-                                setSelectedAttempts(new Set());
-                              }}
-                              className="w-full text-left px-2 py-1.5 text-xs text-slate-400 hover:bg-slate-800 rounded transition-colors"
-                            >
-                              Очистить выбор
-                            </button>
-                            <button
-                              onClick={() => {
-                                setSelectedAttempts(new Set(accelerationAttempts.map((_, i) => i)));
-                              }}
-                              className="w-full text-left px-2 py-1.5 text-xs text-slate-400 hover:bg-slate-800 rounded transition-colors"
-                            >
-                              Выбрать все
-                            </button>
-                            <div className="border-t border-white/10 my-1" />
-                            {accelerationAttempts.map((attempt, index) => (
-                              <button
-                                key={attempt.id}
-                                onClick={() => toggleAttempt(index)}
-                                className={cn(
-                                  "w-full text-left px-2 py-1.5 text-xs rounded transition-colors flex items-center gap-2",
-                                  selectedAttempts.has(index)
-                                    ? "bg-blue-500/20 text-blue-200"
-                                    : "text-slate-400 hover:bg-slate-800"
-                                )}
-                              >
-                                <div
-                                  className={cn(
-                                    "w-2 h-2 rounded-full",
-                                    selectedAttempts.has(index) ? "bg-blue-400" : "bg-slate-600"
-                                  )}
-                                />
-                                <span>#{index + 1}</span>
-                                <span className="text-slate-500">({attempt.startSpeed}-{attempt.endSpeed})</span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
+                  {/* Toggle chips */}
+                  <div className="flex flex-wrap gap-2">
+                    <ToggleChip label={i18n.t('speed')} active={chartToggles.speed} onClick={() => setChartToggles(p => ({...p, speed: !p.speed}))} color="blue" />
+                    <ToggleChip label={i18n.t('gpsSpeed')} active={chartToggles.gpsSpeed} onClick={() => setChartToggles(p => ({...p, gpsSpeed: !p.gpsSpeed}))} color="green" />
+                    <ToggleChip label={i18n.t('power')} active={chartToggles.power} onClick={() => setChartToggles(p => ({...p, power: !p.power}))} color="orange" />
+                    <ToggleChip label={i18n.t('current')} active={chartToggles.current} onClick={() => setChartToggles(p => ({...p, current: !p.current}))} color="pink" />
+                    {displayData[0]?.PhaseCurrent !== undefined && (
+                      <ToggleChip label={i18n.t('phaseCurrent')} active={chartToggles.phaseCurrent} onClick={() => setChartToggles(p => ({...p, phaseCurrent: !p.phaseCurrent}))} color="pink" />
                     )}
+                    <ToggleChip label={i18n.t('voltage')} active={chartToggles.voltage} onClick={() => setChartToggles(p => ({...p, voltage: !p.voltage}))} color="purple" />
+                    <ToggleChip label={i18n.t('batteryPercent')} active={chartToggles.batteryLevel} onClick={() => setChartToggles(p => ({...p, batteryLevel: !p.batteryLevel}))} color="pink" />
+                    <ToggleChip label={i18n.t('temp')} active={chartToggles.temperature} onClick={() => setChartToggles(p => ({...p, temperature: !p.temperature}))} color="orange" />
+                    {displayData[0]?.Temp2 !== undefined && (
+                      <ToggleChip label={i18n.t('temp2')} active={chartToggles.temp2} onClick={() => setChartToggles(p => ({...p, temp2: !p.temp2}))} color="orange" />
+                    )}
+                    {displayData[0]?.Torque !== undefined && (
+                      <ToggleChip label={i18n.t('torque')} active={chartToggles.torque} onClick={() => setChartToggles(p => ({...p, torque: !p.torque}))} color="purple" />
+                    )}
+                    <ToggleChip label={i18n.t('pwm')} active={chartToggles.pwm} onClick={() => setChartToggles(p => ({...p, pwm: !p.pwm}))} color="blue" />
                   </div>
-
-                  {/* Toggle chips - telemetry mode */}
-                  {chartMode === 'telemetry' && (
-                    <div className="flex flex-wrap gap-2">
-                      <ToggleChip label={i18n.t('speed')} active={chartToggles.speed} onClick={() => setChartToggles(p => ({...p, speed: !p.speed}))} color="blue" />
-                      <ToggleChip label={i18n.t('gpsSpeed')} active={chartToggles.gpsSpeed} onClick={() => setChartToggles(p => ({...p, gpsSpeed: !p.gpsSpeed}))} color="green" />
-                      <ToggleChip label={i18n.t('power')} active={chartToggles.power} onClick={() => setChartToggles(p => ({...p, power: !p.power}))} color="orange" />
-                      <ToggleChip label={i18n.t('current')} active={chartToggles.current} onClick={() => setChartToggles(p => ({...p, current: !p.current}))} color="pink" />
-                      {displayData[0]?.PhaseCurrent !== undefined && (
-                        <ToggleChip label={i18n.t('phaseCurrent')} active={chartToggles.phaseCurrent} onClick={() => setChartToggles(p => ({...p, phaseCurrent: !p.phaseCurrent}))} color="pink" />
-                      )}
-                      <ToggleChip label={i18n.t('voltage')} active={chartToggles.voltage} onClick={() => setChartToggles(p => ({...p, voltage: !p.voltage}))} color="purple" />
-                      <ToggleChip label={i18n.t('batteryPercent')} active={chartToggles.batteryLevel} onClick={() => setChartToggles(p => ({...p, batteryLevel: !p.batteryLevel}))} color="pink" />
-                      <ToggleChip label={i18n.t('temp')} active={chartToggles.temperature} onClick={() => setChartToggles(p => ({...p, temperature: !p.temperature}))} color="orange" />
-                      {displayData[0]?.Temp2 !== undefined && (
-                        <ToggleChip label={i18n.t('temp2')} active={chartToggles.temp2} onClick={() => setChartToggles(p => ({...p, temp2: !p.temp2}))} color="orange" />
-                      )}
-                      {displayData[0]?.Torque !== undefined && (
-                        <ToggleChip label={i18n.t('torque')} active={chartToggles.torque} onClick={() => setChartToggles(p => ({...p, torque: !p.torque}))} color="purple" />
-                      )}
-                      <ToggleChip label={i18n.t('pwm')} active={chartToggles.pwm} onClick={() => setChartToggles(p => ({...p, pwm: !p.pwm}))} color="blue" />
-                    </div>
-                  )}
 
                   {/* Compact help hints */}
                   <div className="px-5 pb-2 pt-1">
@@ -1946,7 +1777,6 @@ function App() {
               onPositionChange={setFloatingPanelPosition}
               isFrozen={floatingPanelFrozen}
               onToggleFreeze={() => setFloatingPanelFrozen(prev => !prev)}
-              attemptInfo={floatingPanelAttemptInfo}
             />
           </>
         ) : (
