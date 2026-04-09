@@ -14,7 +14,8 @@ import {
   Filler
 } from 'chart.js';
 import { parseTripData, calculateSummary, downsample, filterData, defaultFilterConfig, type DataFilterConfig } from './utils/parser';
-import type { TripEntry, TripSummary } from './types';
+import { detectAccelerations } from './utils/acceleration';
+import type { TripEntry, TripSummary, AccelerationAttempt } from './types';
 import {
   Activity, Clock, Settings, Eye, EyeOff, Grid3X3, ZoomIn, ZoomOut, Share2, Play, Upload, BarChart
 } from 'lucide-react';
@@ -165,6 +166,12 @@ function App() {
     maxPhaseCurrent: true,
     maxTemp: false,
   });
+
+  // Acceleration state
+  const [accelerationAttempts, setAccelerationAttempts] = useState<AccelerationAttempt[]>([]);
+  const [showIncomplete, setShowIncomplete] = useState<boolean>(false);
+  const [selectedColumns, setSelectedColumns] = useState<Set<string>>(new Set(['time', 'distance', 'averagePower', 'peakPower', 'batteryDrop']));
+  const [accelerationThreshold, setAccelerationThreshold] = useState<number>(60);
 
   // Chart state from custom hook
   const {
@@ -686,6 +693,11 @@ function App() {
     setChartZoom({ min: newMin, max: newMax });
   }, [timeRange, chartZoom]);
 
+  // Memoize acceleration detection to prevent re-detection on unnecessary re-renders
+  const accelerationAttemptsMemoized = useMemo(() => {
+    return detectAccelerations(data, accelerationThreshold);
+  }, [data, accelerationThreshold]);
+
   const handleFile = (file: File) => {
     if (!file.name.endsWith('.csv')) {
       alert(i18n.t('uploadError'));
@@ -699,6 +711,7 @@ function App() {
       const parsedData = parseTripData(text);
       setData(parsedData);
       setSummary(calculateSummary(parsedData));
+      setAccelerationAttempts(accelerationAttemptsMemoized);
       resetZoom(); // Reset zoom on new file load
       // Reset time range
       if (parsedData.length > 0) {
