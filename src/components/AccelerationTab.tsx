@@ -105,7 +105,7 @@ export const AccelerationTab = memo(({
 
         if (attemptData.length > 0) {
           datasets.push({
-            label: `${preset.label} #${index + 1}`,
+            label: `${preset.label} #${index + 1} (${attempt.time.toFixed(2)}с, ${attempt.distance.toFixed(1)}м)`,
             data: attemptData.map(e => ({ x: e.timestamp, y: e.Speed })),
             borderColor: PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS],
             backgroundColor: `${PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS]}20`,
@@ -128,7 +128,7 @@ export const AccelerationTab = memo(({
 
         if (attemptData.length > 0) {
           datasets.push({
-            label: `${fromSpeed}-${toSpeed} #${index + 1}`,
+            label: `${fromSpeed}-${toSpeed} #${index + 1} (${attempt.time.toFixed(2)}с, ${attempt.distance.toFixed(1)}м)`,
             data: attemptData.map(e => ({ x: e.timestamp, y: e.Speed })),
             borderColor: PRESET_COLORS.custom,
             backgroundColor: `${PRESET_COLORS.custom}20`,
