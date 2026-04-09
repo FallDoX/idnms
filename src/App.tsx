@@ -207,6 +207,21 @@ function App() {
   // Chart mode state
   const [chartMode, setChartMode] = useState<'telemetry' | 'acceleration'>('telemetry');
 
+  // Attempt selection state
+  const [selectedAttempts, setSelectedAttempts] = useState<Set<number>>(new Set());
+
+  const toggleAttempt = useCallback((attemptIndex: number) => {
+    setSelectedAttempts(prev => {
+      const next = new Set(prev);
+      if (next.has(attemptIndex)) {
+        next.delete(attemptIndex);
+      } else {
+        next.add(attemptIndex);
+      }
+      return next;
+    });
+  }, []);
+
   // Chart state from custom hook
   const {
     chartToggles,
@@ -1470,7 +1485,20 @@ function App() {
                   {/* Mode toggle button */}
                   <div className="flex items-center gap-2 px-2 py-1 bg-slate-800/50 rounded-lg border border-white/5">
                     <button
-                      onClick={() => setChartMode(prev => prev === 'telemetry' ? 'acceleration' : 'telemetry')}
+                      onClick={() => {
+                        setChartMode(prev => {
+                          const newMode = prev === 'telemetry' ? 'acceleration' : 'telemetry';
+                          // Clear selection when switching to telemetry
+                          if (newMode === 'telemetry') {
+                            setSelectedAttempts(new Set());
+                          }
+                          // Auto-select first attempt when switching to acceleration if no attempts selected
+                          if (newMode === 'acceleration' && selectedAttempts.size === 0 && accelerationAttempts.length > 0) {
+                            setSelectedAttempts(new Set([0]));
+                          }
+                          return newMode;
+                        });
+                      }}
                       className={cn(
                         "px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
                         chartMode === 'acceleration'
