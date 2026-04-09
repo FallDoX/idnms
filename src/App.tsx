@@ -1273,8 +1273,11 @@ function App() {
                           </div>
                         </button>
                         {showFilterDropdown && (
-                          <div className="absolute top-full left-0 mt-2 w-64 bg-slate-900/95 backdrop-blur-xl rounded-xl border border-white/10 shadow-xl z-50 p-4 space-y-3">
+                          <div className="absolute top-full left-0 mt-2 w-72 bg-slate-900/95 backdrop-blur-xl rounded-xl border border-white/10 shadow-xl z-50 p-4 space-y-3">
                             <span className="text-xs font-semibold text-slate-300">Настройки фильтра</span>
+                            <p className="text-xs text-slate-400 leading-relaxed">
+                              Фильтр удаляет аномалии: резкие скачки GPS скорости выше лимита и разрывы во времени между точками данных.
+                            </p>
                             {filterConfig.enabled && (
                               <>
                                 <div>
