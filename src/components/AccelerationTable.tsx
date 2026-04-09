@@ -96,9 +96,9 @@ export const AccelerationTable = memo(({
         <p className="text-xs text-slate-400 mb-3">
           Выберите метрики для отображения. Основные: время, дистанция, мощность
         </p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
           {Object.entries(columnLabels).map(([key, label]) => (
-            <label key={key} className="flex items-center gap-2 cursor-pointer group">
+            <label key={key} className="flex items-center gap-2 cursor-pointer group p-2 rounded-lg hover:bg-white/5 transition-colors">
               <input
                 type="checkbox"
                 checked={selectedColumns.has(key)}
@@ -107,7 +107,7 @@ export const AccelerationTable = memo(({
               />
               <span className={cn(
                 "text-xs transition-colors",
-                selectedColumns.has(key) ? "text-slate-200" : "text-slate-400 group-hover:text-slate-300"
+                selectedColumns.has(key) ? "text-slate-200 font-medium" : "text-slate-400 group-hover:text-slate-300"
               )}>{label}</span>
             </label>
           ))}
