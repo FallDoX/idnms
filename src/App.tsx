@@ -18,6 +18,7 @@ import { detectAccelerations } from './utils/acceleration';
 import type { TripEntry, TripSummary, AccelerationAttempt } from './types';
 import { AccelerationTab } from './components/AccelerationTab';
 import AccelerationConfig from './components/AccelerationConfig';
+import AttemptButton from './components/AttemptButton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Activity, Clock, Settings, Eye, EyeOff, Grid3X3, ZoomIn, ZoomOut, Share2, Play, Upload, BarChart
@@ -1539,26 +1540,44 @@ function App() {
                     </button>
                   </div>
 
-                  {/* Toggle chips */}
-                  <div className="flex flex-wrap gap-2">
-                    <ToggleChip label={i18n.t('speed')} active={chartToggles.speed} onClick={() => setChartToggles(p => ({...p, speed: !p.speed}))} color="blue" />
-                    <ToggleChip label={i18n.t('gpsSpeed')} active={chartToggles.gpsSpeed} onClick={() => setChartToggles(p => ({...p, gpsSpeed: !p.gpsSpeed}))} color="green" />
-                    <ToggleChip label={i18n.t('power')} active={chartToggles.power} onClick={() => setChartToggles(p => ({...p, power: !p.power}))} color="orange" />
-                    <ToggleChip label={i18n.t('current')} active={chartToggles.current} onClick={() => setChartToggles(p => ({...p, current: !p.current}))} color="pink" />
-                    {displayData[0]?.PhaseCurrent !== undefined && (
-                      <ToggleChip label={i18n.t('phaseCurrent')} active={chartToggles.phaseCurrent} onClick={() => setChartToggles(p => ({...p, phaseCurrent: !p.phaseCurrent}))} color="pink" />
-                    )}
-                    <ToggleChip label={i18n.t('voltage')} active={chartToggles.voltage} onClick={() => setChartToggles(p => ({...p, voltage: !p.voltage}))} color="purple" />
-                    <ToggleChip label={i18n.t('batteryPercent')} active={chartToggles.batteryLevel} onClick={() => setChartToggles(p => ({...p, batteryLevel: !p.batteryLevel}))} color="pink" />
-                    <ToggleChip label={i18n.t('temp')} active={chartToggles.temperature} onClick={() => setChartToggles(p => ({...p, temperature: !p.temperature}))} color="orange" />
-                    {displayData[0]?.Temp2 !== undefined && (
-                      <ToggleChip label={i18n.t('temp2')} active={chartToggles.temp2} onClick={() => setChartToggles(p => ({...p, temp2: !p.temp2}))} color="orange" />
-                    )}
-                    {displayData[0]?.Torque !== undefined && (
-                      <ToggleChip label={i18n.t('torque')} active={chartToggles.torque} onClick={() => setChartToggles(p => ({...p, torque: !p.torque}))} color="purple" />
-                    )}
-                    <ToggleChip label={i18n.t('pwm')} active={chartToggles.pwm} onClick={() => setChartToggles(p => ({...p, pwm: !p.pwm}))} color="blue" />
-                  </div>
+                  {/* Toggle chips - telemetry mode */}
+                  {chartMode === 'telemetry' && (
+                    <div className="flex flex-wrap gap-2">
+                      <ToggleChip label={i18n.t('speed')} active={chartToggles.speed} onClick={() => setChartToggles(p => ({...p, speed: !p.speed}))} color="blue" />
+                      <ToggleChip label={i18n.t('gpsSpeed')} active={chartToggles.gpsSpeed} onClick={() => setChartToggles(p => ({...p, gpsSpeed: !p.gpsSpeed}))} color="green" />
+                      <ToggleChip label={i18n.t('power')} active={chartToggles.power} onClick={() => setChartToggles(p => ({...p, power: !p.power}))} color="orange" />
+                      <ToggleChip label={i18n.t('current')} active={chartToggles.current} onClick={() => setChartToggles(p => ({...p, current: !p.current}))} color="pink" />
+                      {displayData[0]?.PhaseCurrent !== undefined && (
+                        <ToggleChip label={i18n.t('phaseCurrent')} active={chartToggles.phaseCurrent} onClick={() => setChartToggles(p => ({...p, phaseCurrent: !p.phaseCurrent}))} color="pink" />
+                      )}
+                      <ToggleChip label={i18n.t('voltage')} active={chartToggles.voltage} onClick={() => setChartToggles(p => ({...p, voltage: !p.voltage}))} color="purple" />
+                      <ToggleChip label={i18n.t('batteryPercent')} active={chartToggles.batteryLevel} onClick={() => setChartToggles(p => ({...p, batteryLevel: !p.batteryLevel}))} color="pink" />
+                      <ToggleChip label={i18n.t('temp')} active={chartToggles.temperature} onClick={() => setChartToggles(p => ({...p, temperature: !p.temperature}))} color="orange" />
+                      {displayData[0]?.Temp2 !== undefined && (
+                        <ToggleChip label={i18n.t('temp2')} active={chartToggles.temp2} onClick={() => setChartToggles(p => ({...p, temp2: !p.temp2}))} color="orange" />
+                      )}
+                      {displayData[0]?.Torque !== undefined && (
+                        <ToggleChip label={i18n.t('torque')} active={chartToggles.torque} onClick={() => setChartToggles(p => ({...p, torque: !p.torque}))} color="purple" />
+                      )}
+                      <ToggleChip label={i18n.t('pwm')} active={chartToggles.pwm} onClick={() => setChartToggles(p => ({...p, pwm: !p.pwm}))} color="blue" />
+                    </div>
+                  )}
+
+                  {/* Attempt buttons - acceleration mode */}
+                  {chartMode === 'acceleration' && (
+                    <div className="flex flex-wrap gap-2 overflow-x-auto pb-1">
+                      {accelerationAttempts.map((attempt, index) => (
+                        <AttemptButton
+                          key={attempt.id}
+                          attempt={attempt}
+                          index={index}
+                          selected={selectedAttempts.has(index)}
+                          onSelect={toggleAttempt}
+                          color={ATTEMPT_COLORS[index % ATTEMPT_COLORS.length]}
+                        />
+                      ))}
+                    </div>
+                  )}
 
                   {/* Compact help hints */}
                   <div className="px-5 pb-2 pt-1">
