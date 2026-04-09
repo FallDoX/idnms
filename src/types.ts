@@ -65,3 +65,21 @@ export interface TripSummary {
 }
 
 export type CSVFormat = 'old' | 'new';
+
+export interface AccelerationAttempt {
+  id: string;
+  startTimestamp: number;
+  endTimestamp: number;
+  startSpeed: number;
+  endSpeed: number;
+  targetSpeed: number;
+  time: number;
+  distance: number;
+  averagePower: number;
+  peakPower: number;
+  averageCurrent: number;
+  averageVoltage: number;
+  batteryDrop: number;
+  averageTemperature: number;
+  isComplete: boolean;
+}
