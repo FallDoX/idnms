@@ -14,7 +14,6 @@ import {
 } from 'chart.js';
 import 'chartjs-adapter-date-fns';
 import { AccelerationTable } from './AccelerationTable';
-import { detectAccelerations } from '../utils/acceleration';
 import type { AccelerationAttempt, TripEntry } from '../types';
 
 ChartJS.register(
@@ -36,8 +35,6 @@ interface AccelerationTabProps {
   onShowIncompleteToggle: () => void;
   onColumnToggle: (column: string) => void;
   data: TripEntry[];
-  fromSpeed: number;
-  toSpeed: number;
 }
 
 const PRESET_COLORS = {
@@ -48,12 +45,17 @@ const PRESET_COLORS = {
   'custom': '#8b5cf6',
 };
 
+const ATTEMPT_COLORS = [
+  '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+  '#ec4899', '#f97316', '#06b6d4', '#a78bfa', '#fb923c'
+];
+
 const PRESETS = [
   { id: '0-25', from: 0, to: 25, label: '0-25' },
   { id: '0-60', from: 0, to: 60, label: '0-60' },
   { id: '0-90', from: 0, to: 90, label: '0-90' },
   { id: '0-100', from: 0, to: 100, label: '0-100' },
-  { id: 'custom', from: -1, to: -1, label: 'Настроить' },
+  { id: 'custom', from: -1, to: -1, label: 'Все' },
 ];
 
 export const AccelerationTab = memo(({
@@ -63,8 +65,6 @@ export const AccelerationTab = memo(({
   onShowIncompleteToggle,
   onColumnToggle,
   data,
-  fromSpeed,
-  toSpeed,
 }: AccelerationTabProps) => {
   const [selectedPresets, setSelectedPresets] = useState<Set<string>>(new Set());
 
@@ -95,8 +95,10 @@ export const AccelerationTab = memo(({
       const preset = PRESETS.find(p => p.id === presetId);
       if (!preset || preset.id === 'custom') return;
 
-      // Detect acceleration attempts for this preset range dynamically (use to speed as target)
-      const presetAttempts = detectAccelerations(data, preset.to);
+      // Filter attempts that match the preset range (allow some tolerance)
+      const presetAttempts = accelerationAttempts.filter(
+        attempt => Math.abs(attempt.startSpeed - preset.from) < 1 && Math.abs(attempt.endSpeed - preset.to) < 1
+      );
 
       presetAttempts.forEach((attempt, index) => {
         const attemptData = data.filter(
@@ -117,21 +119,19 @@ export const AccelerationTab = memo(({
       });
     });
 
-    // Add custom preset if selected
-    if (selectedPresets.has('custom') && toSpeed >= 0) {
-      const customAttempts = detectAccelerations(data, toSpeed);
-
-      customAttempts.forEach((attempt, index) => {
+    // Show all attempts if no preset selected or custom selected
+    if (selectedPresets.size === 0 || selectedPresets.has('custom')) {
+      accelerationAttempts.forEach((attempt, index) => {
         const attemptData = data.filter(
           e => e.timestamp >= attempt.startTimestamp && e.timestamp <= attempt.endTimestamp
         );
 
         if (attemptData.length > 0) {
           datasets.push({
-            label: `${fromSpeed}-${toSpeed} #${index + 1} (${attempt.time.toFixed(2)}с, ${attempt.distance.toFixed(1)}м)`,
+            label: `#${index + 1} (${attempt.startSpeed.toFixed(0)}-${attempt.endSpeed.toFixed(0)} км/ч, ${attempt.time.toFixed(2)}с, ${attempt.distance.toFixed(1)}м)`,
             data: attemptData.map(e => ({ x: e.timestamp, y: e.Speed })),
-            borderColor: PRESET_COLORS.custom,
-            backgroundColor: `${PRESET_COLORS.custom}20`,
+            borderColor: ATTEMPT_COLORS[index % ATTEMPT_COLORS.length],
+            backgroundColor: `${ATTEMPT_COLORS[index % ATTEMPT_COLORS.length]}20`,
             fill: false,
             tension: 0.1,
             pointRadius: 0,
@@ -141,7 +141,7 @@ export const AccelerationTab = memo(({
     }
 
     return { datasets };
-  }, [selectedPresets, data, fromSpeed, toSpeed]);
+  }, [accelerationAttempts, selectedPresets, data]);
 
   const chartOptions = {
     responsive: true,
@@ -225,7 +225,7 @@ export const AccelerationTab = memo(({
         </div>
         {selectedPresets.has('custom') && (
           <span className="text-xs text-slate-500">
-            (настроено: {fromSpeed}-{toSpeed} км/ч)
+            (все попытки)
           </span>
         )}
       </div>
