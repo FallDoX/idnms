@@ -145,7 +145,7 @@ function App() {
   const [isDragging, setIsDragging] = useState(false);
   const [fileName, setFileName] = useState<string>('');
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const [showTelemetryToggles, setShowTelemetryToggles] = useState(true);
+  const [showTelemetryToggles, setShowTelemetryToggles] = useState(false);
 
   // Time range state
   const [timeRange, setTimeRange] = useState<{ start: number; end: number } | null>(null);
