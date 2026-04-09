@@ -2,7 +2,7 @@
 
 ## Architectural Pattern
 
-**Single-Page Application (SPA)** with React 19 as the primary framework. The application follows a **monolithic component architecture** where most logic resides in a single large component (`App.tsx` ~2500 lines).
+**Single-Page Application (SPA)** with React 19 as the primary framework. The application follows a **component-based architecture** with custom hooks for logic separation. Main component (`App.tsx` ~1800 lines after refactoring).
 
 ## Application Structure
 
@@ -25,17 +25,16 @@ src/main.tsx
 App (main container)
 ├─ File Upload Zone
 ├─ Dashboard (when data loaded)
-│  ├─ Summary Cards Grid
-│  │  └─ StatCard (memoized)
+│  ├─ TripOverview (component)
+│  │  ├─ Summary Cards Grid
+│  │  │  └─ StatCard (memoized)
+│  │  └─ Settings Panel (expandable)
 │  ├─ Main Chart Section
 │  │  ├─ Chart Controls (toggles, zoom, filters)
 │  │  └─ Chart.js Line/Scatter Component
 │  │     └─ Custom Plugin: verticalCursor
-│  ├─ Acceleration Analysis Section
-│  │  ├─ AccelerationChart (component)
-│  │  └─ AccelerationTable (component)
 │  └─ FloatingDataPanel (draggable overlay)
-└─ AccelerationTable (standalone component)
+└─ Demo Buttons (for testing)
 ```
 
 ### Data Flow
@@ -68,14 +67,6 @@ CSV Upload → Parser → TripEntry[] → State
 3. **Downsampled Data**: `downsample()` reduces points for performance
 4. **Chart Data**: `combinedChartData` transforms to Chart.js format
 
-#### Acceleration Analysis
-
-```
-findAccelerationRuns()
-  └─ AccelerationRun[]
-      └─ calculateBestTimeForThreshold()
-          └─ AccelerationResult
-```
 
 ### Layers
 
@@ -98,7 +89,8 @@ findAccelerationRuns()
 
 **Custom Hook Pattern**:
 - `createI18n()` - Returns i18n singleton with `t`, `setLanguage`, `getLanguage`
-- Not using React hooks for state management
+- `useChartOptions()` - Encapsulates common Chart.js options
+- `useChartState()` - Manages chart-related state (zoom, view mode, toggles)
 
 **Memoization**:
 - `memo()` for `StatCard`, `ToggleChip` components
@@ -110,8 +102,8 @@ findAccelerationRuns()
 - Registered globally in `App.tsx`
 
 **Component Composition**:
-- Small reusable components (`StatCard`, `ToggleChip`)
-- Large monolithic main component (`App.tsx`)
+- Small reusable components (`StatCard`, `ToggleChip`, `TripOverview`)
+- Main component (`App.tsx`) refactored to ~1800 lines from ~2500
 
 ### Performance Optimizations
 

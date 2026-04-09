@@ -61,7 +61,7 @@ log-analyzer/
 **Core Files:**
 
 - `main.tsx` - Application entry point with ErrorBoundary wrapper
-- `App.tsx` - Main application component (monolithic, contains all logic)
+- `App.tsx` - Main application component (~1800 lines after refactoring)
 - `index.css` - Base CSS styles
 - `App.css` - Component-specific styles
 
@@ -70,9 +70,6 @@ log-analyzer/
 - `types.ts` - TypeScript interfaces:
   - `TripEntry` - Single data point from CSV
   - `TripSummary` - Calculated trip statistics
-  - `AccelerationRun` - Acceleration attempt data
-  - `AccelerationResult` - Acceleration calculation results
-  - `SpeedThreshold` - Speed threshold configuration
   - `CSVFormat` - Format type ('old' | 'new')
 
 **Internationalization:**
@@ -87,8 +84,7 @@ log-analyzer/
 
 **Component Files:**
 
-- `AccelerationChart.tsx` (~21KB) - Top 5 acceleration attempts visualization
-- `AccelerationTable.tsx` (~33KB) - Acceleration threshold configuration table
+- `TripOverview.tsx` - Trip summary cards with settings panel
 - `ErrorBoundary.tsx` - React error boundary wrapper
 - `FloatingDataPanel.tsx` - Draggable data overlay panel
 - `ScatterPlot.tsx` - Generic scatter plot component
@@ -105,15 +101,12 @@ log-analyzer/
 
 **Utility Files:**
 
-- `parser.ts` (~25KB) - CSV parsing and data processing:
+- `parser.ts` (~20KB) - CSV parsing and data processing:
   - `parseTripData()` - Main CSV parser
   - `parseOldDate()` - Old format date parser
   - `parseNewDate()` - New format date parser
   - `detectFormat()` - Auto-detect CSV format
   - `calculateSummary()` - Trip statistics calculation
-  - `findAccelerationRuns()` - Acceleration detection
-  - `calculateBestTimeForThreshold()` - Best time calculation
-  - `getAccelerationForThresholds()` - Batch threshold calculation
   - `downsample()` - Data point reduction for performance
   - `filterData()` - Anomaly removal
 
@@ -121,6 +114,13 @@ log-analyzer/
   - `throttle()` - Rate limiting function
   - `debounce()` - Delayed function execution
   - `memoize()` - Function result caching
+
+### `src/hooks/` - Custom React Hooks
+
+**Hook Files:**
+
+- `useChartOptions.ts` - Encapsulates common Chart.js options
+- `useChartState.ts` - Manages chart-related state (zoom, view mode, toggles)
 
 ### `src/tests/` - Test Scripts
 
@@ -236,17 +236,18 @@ Contains image and asset files referenced in the application.
 ## File Size Indicators
 
 **Large Files (Potential Refactoring Candidates):**
-- `src/App.tsx` - ~2500 lines (monolithic, should be split)
-- `src/components/AccelerationTable.tsx` - ~33KB
-- `src/components/AccelerationChart.tsx` - ~21KB
-- `src/utils/parser.ts` - ~25KB
+- `src/App.tsx` - ~1800 lines (refactored from ~2500 lines)
+- `src/utils/parser.ts` - ~20KB (acceleration functions removed)
 
 **Moderate Files:**
 - `src/i18n.ts` - ~324 lines
 - `src/components/ScatterPlot.tsx` - ~10KB
 - `src/components/TimeRangeSlider.tsx` - ~9KB
+- `src/components/TripOverview.tsx` - ~8KB (new component)
 
 **Small Files:**
-- `src/types.ts` - ~95 lines
+- `src/types.ts` - ~65 lines (acceleration types removed)
 - `src/utils/performance.ts` - ~3KB
 - `src/components/Tooltip.tsx` - ~3KB
+- `src/hooks/useChartOptions.ts` - ~2KB (new)
+- `src/hooks/useChartState.ts` - ~2KB (new)

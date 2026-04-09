@@ -56,39 +56,12 @@ export interface TripSummary {
   batteryVoltageDrop?: number;  // New: Voltage drop % (peak to min under load)
   maxBatteryDrop?: number; // Maximum battery SOC % drop during the trip
   duration: number; // ms
-  best0to60?: number | null; // seconds
-  peakAcceleration?: number; // m/s²
   maxTorque?: number; // New: max torque
   maxPhaseCurrent?: number; // New: max phase current
   avgTemp?: number;
   maxTemp?: number;
   maxCurrent?: number; // Max battery current
   consumptionPerKm?: number; // Wh/km
-}
-
-export interface AccelerationRun {
-  startTime: number;
-  endTime: number;
-  duration: number; // seconds
-  startSpeed: number;
-  endSpeed: number;
-  avgAcceleration: number; // m/s²
-  peakAcceleration: number; // m/s²
-  dataPoints: TripEntry[];
-}
-
-export interface AccelerationResult {
-  time: number | null; // seconds, null if not reached
-  timeMs: number | null; // milliseconds for display
-  bestRun: AccelerationRun | null;
-  allRuns: AccelerationRun[];
-}
-
-export interface SpeedThreshold {
-  id: string;
-  label: string;
-  value: number; // km/h - target speed (end)
-  startValue?: number; // km/h - starting speed (default 0)
 }
 
 export type CSVFormat = 'old' | 'new';

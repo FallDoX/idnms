@@ -6,7 +6,7 @@
 
 **Location:** `src/App.tsx`
 
-**Issue:** Single component contains ~2500 lines of code
+**Issue:** Single component contains ~1800 lines of code (refactored from ~2500 lines)
 
 **Impact:**
 - Difficult to maintain and understand
@@ -18,8 +18,9 @@
 - Data upload section
 - Dashboard section
 - Chart controls section
-- Acceleration analysis section
 - State management hooks
+
+**Progress:** Partially addressed with TripOverview component extraction and custom hooks (useChartOptions, useChartState)
 
 ### No State Management
 
@@ -57,9 +58,8 @@
 ### Large File Sizes
 
 **Files:**
-- `src/App.tsx` - ~2500 lines, 124KB
-- `src/components/AccelerationTable.tsx` - ~33KB
-- `src/components/AccelerationChart.tsx` - ~21KB
+- `src/App.tsx` - ~1800 lines, reduced from ~2500 lines
+- `src/utils/parser.ts` - ~20KB, reduced from ~25KB
 
 **Impact:**
 - Slow development hot reload
@@ -67,6 +67,8 @@
 - Difficult code navigation
 
 **Recommendation:** Code splitting and component extraction
+
+**Progress:** AccelerationChart.tsx and AccelerationTable.tsx removed, App.tsx refactored
 
 ### No Code Splitting
 
@@ -220,7 +222,7 @@
 
 ### Inline Styles
 
-**Issue:** Some inline styles in AccelerationChart.tsx
+**Issue:** Some inline styles in App.tsx
 
 **Impact:**
 - Lint warnings
@@ -228,9 +230,11 @@
 - Hard to maintain
 - Cannot use Tailwind utilities
 
-**Location:** Lines 473, 481, 489 in AccelerationChart.tsx
+**Location:** Various lines in App.tsx (StatCard component)
 
-**Recommendation:** Replace with Tailwind classes
+**Recommendation:** Replace with Tailwind classes or CSS modules
+
+**Status:** AccelerationChart.tsx deleted, but inline styles remain in App.tsx
 
 ## Maintainability Concerns
 
@@ -413,7 +417,7 @@
 ## Priority Recommendations
 
 ### High Priority (Address Soon)
-1. Split `App.tsx` into smaller components
+1. Continue splitting `App.tsx` into smaller components (partially done - TripOverview extracted)
 2. Add error recovery to ErrorBoundary
 3. Implement state management (Context API)
 4. Add input validation for CSV uploads
@@ -423,7 +427,7 @@
 1. Add persistence (LocalStorage)
 2. Implement code splitting
 3. Add automated testing (Vitest + React Testing Library)
-4. Fix inline styles in AccelerationChart.tsx
+4. Fix inline styles in App.tsx (StatCard component)
 5. Add ARIA labels and keyboard navigation
 
 ### Low Priority (Technical Debt Backlog)

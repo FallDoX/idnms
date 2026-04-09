@@ -175,7 +175,7 @@ export function ScatterPlot({ data }: ScatterPlotProps) {
         padding: 12,
         cornerRadius: 8,
         callbacks: {
-          label: (context: any) => {
+          label: (context: { raw: { x: number; y: number; colorValue: number } }) => {
             const point = context.raw;
             return [
               `${xConfig.label}: ${point.x.toFixed(2)} ${xConfig.unit}`,
@@ -247,23 +247,27 @@ export function ScatterPlot({ data }: ScatterPlotProps) {
 
       {/* Color Legend */}
       {scatterData.colorRange && (
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-400">{scatterData.colorRange.label} ({scatterData.colorRange.unit}):</span>
+        <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-500 via-green-500 via-yellow-500 to-red-500" />
+              <span className="text-sm font-medium text-white/90">Цветовая шкала</span>
+            </div>
+            <span className="text-xs text-slate-400">{scatterData.colorRange.label} ({scatterData.colorRange.unit})</span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 mb-2">
             {legendValues.map((value, i) => (
               <div
                 key={i}
-                className="flex-1 h-3 rounded-sm"
+                className="flex-1 h-4 rounded-sm transition-all hover:h-5"
                 style={{ backgroundColor: getColorForValue(value, scatterData.colorRange!.min, scatterData.colorRange!.max) }}
               />
             ))}
           </div>
-          <div className="flex justify-between text-xs text-slate-500">
-            <span>{scatterData.colorRange.min.toFixed(1)}</span>
-            <span>{((scatterData.colorRange.min + scatterData.colorRange.max) / 2).toFixed(1)}</span>
-            <span>{scatterData.colorRange.max.toFixed(1)}</span>
+          <div className="flex justify-between text-xs text-slate-400">
+            <span className="bg-white/5 px-2 py-1 rounded">{scatterData.colorRange.min.toFixed(1)}</span>
+            <span className="bg-white/5 px-2 py-1 rounded">{((scatterData.colorRange.min + scatterData.colorRange.max) / 2).toFixed(1)}</span>
+            <span className="bg-white/5 px-2 py-1 rounded">{scatterData.colorRange.max.toFixed(1)}</span>
           </div>
         </div>
       )}

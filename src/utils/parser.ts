@@ -1,5 +1,5 @@
 import Papa from 'papaparse';
-import type { TripEntry, TripSummary, AccelerationRun, AccelerationResult, SpeedThreshold, CSVFormat } from '../types.js';
+import type { TripEntry, TripSummary, CSVFormat } from '../types.js';
 
 // Parse old format date: "02.04.2026 09:33:15.123"
 function parseOldDate(dateStr: string | unknown): number {
@@ -27,7 +27,7 @@ function parseOldDate(dateStr: string | unknown): number {
     const ms = secParts.length > 1 ? parseInt(secParts[1]) : 0;
 
     return new Date(year, month - 1, day, hour, min, sec, ms).getTime();
-  } catch (e) {
+  } catch {
     return NaN;
   }
 }
@@ -55,7 +55,7 @@ function parseNewDate(dateStr: string | unknown, timeStr: string | unknown): num
     const ms = secParts.length > 1 ? parseInt(secParts[1].padEnd(3, '0').substring(0, 3)) : 0;
 
     return new Date(year, month - 1, day, hour, min, sec, ms).getTime();
-  } catch (e) {
+  } catch {
     return NaN;
   }
 }
@@ -169,8 +169,8 @@ export function downsample<T>(data: T[], limit: number = 2000, timeRange?: { sta
   // If zoomed in (viewing less than 30% of data), use higher limit for precision
   let adaptiveLimit = limit;
   if (timeRange && data.length > 0) {
-    const dataStart = (data[0] as any).timestamp ?? 0;
-    const dataEnd = (data[data.length - 1] as any).timestamp ?? dataStart;
+    const dataStart = (data[0] as TripEntry).timestamp ?? 0;
+    const dataEnd = (data[data.length - 1] as TripEntry).timestamp ?? dataStart;
     const totalRange = dataEnd - dataStart;
     const viewRange = timeRange.end - timeRange.start;
     
@@ -249,11 +249,6 @@ export function calculateSummary(data: TripEntry[]): TripSummary {
   const phaseCurrents = data.map(e => e.PhaseCurrent).filter((p): p is number => p !== undefined && p !== null);
   const maxPhaseCurrent = phaseCurrents.length > 0 ? Math.max(...phaseCurrents) : undefined;
 
-  // Calculate acceleration metrics
-  const accelerationRuns = findAccelerationRuns(data);
-  const best0to60 = calculateBestTimeForThreshold(data, 60, 5, accelerationRuns);
-  const peakAcc = calculatePeakAcceleration(data);
-
   const maxCurrent = Math.max(...data.map(e => e.Current || 0));
 
   // Calculate voltage drop (peak voltage to minimum under load)
@@ -296,8 +291,6 @@ export function calculateSummary(data: TripEntry[]): TripSummary {
     batteryVoltageDrop,
     maxBatteryDrop,
     duration,
-    best0to60,
-    peakAcceleration: peakAcc,
     maxTorque,
     maxPhaseCurrent,
     avgTemp,
@@ -306,182 +299,6 @@ export function calculateSummary(data: TripEntry[]): TripSummary {
     consumptionPerKm,
   };
 }
-
-/**
- * Находит все попытки разгона — для каждой точки где speed <= 5
- * смотрим вперёд и фиксируем время достижения каждого порога.
- */
-export function findAccelerationRuns(data: TripEntry[]): AccelerationRun[] {
-  const runs: AccelerationRun[] = [];
-
-  for (let i = 0; i < data.length; i++) {
-    if (data[i].Speed > 5) continue;
-
-    const startTime = data[i].timestamp;
-    let peakSpeed = data[i].Speed;
-    let peakAcc = 0;
-    let endIdx = i;
-
-    // Смотрим вперёд максимум 120 секунд или 1000 точек
-    for (let j = i + 1; j < Math.min(i + 1000, data.length); j++) {
-      const dt = (data[j].timestamp - startTime) / 1000;
-      if (dt > 120) break;
-
-      if (data[j].Speed > peakSpeed) {
-        peakSpeed = data[j].Speed;
-        endIdx = j;
-      }
-
-      // Мгновенное ускорение
-      if (j > 0) {
-        const dtInst = (data[j].timestamp - data[j - 1].timestamp) / 1000;
-        if (dtInst > 0) {
-          const acc = (data[j].Speed - data[j - 1].Speed) / 3.6 / dtInst;
-          if (acc > peakAcc) peakAcc = acc;
-        }
-      }
-    }
-
-    // Сохраняем если набрали > 20 км/ч, длительность >= 2 сек, среднее ускорение >= 1 м/с²
-    const duration = (data[endIdx].timestamp - startTime) / 1000;
-    const avgAcc = duration > 0 ? (peakSpeed - data[i].Speed) / 3.6 / duration : 0;
-    
-    // Пиковое ускорение может быть высоким для мощных систем (до 30 м/с² ≈ 3g)
-    const MAX_PEAK_ACCEL = 35.0; // м/с², примерно 3.5g - разумный максимум
-    
-    if (peakSpeed > 20 && duration >= 2.0 && avgAcc >= 1.0 && peakAcc <= MAX_PEAK_ACCEL) {
-      // Проверяем на разрывы времени между точками
-      let hasTimeGap = false;
-      for (let k = i; k < endIdx; k++) {
-        if ((data[k + 1]?.timestamp - data[k]?.timestamp) > 2000) {
-          hasTimeGap = true;
-          break;
-        }
-      }
-      
-      if (!hasTimeGap) {
-        const runData = data.slice(i, endIdx + 1);
-
-        runs.push({
-          startTime,
-          endTime: data[endIdx].timestamp,
-          duration,
-          startSpeed: data[i].Speed,
-          endSpeed: peakSpeed,
-          avgAcceleration: avgAcc,
-          peakAcceleration: peakAcc,
-          dataPoints: runData,
-        });
-      }
-    }
-  }
-
-  return runs;
-}
-
-/**
- * Находит лучшее время для достижения целевой скорости из всех попыток
- * Теперь поддерживает произвольную начальную скорость (startSpeed)
- */
-export function calculateBestTimeForThreshold(
-  data: TripEntry[],
-  targetSpeed: number,
-  startSpeedThreshold: number = 5, // По умолчанию допуск 5 км/ч от нуля
-  runs?: AccelerationRun[]
-): number | null {
-  const accelerationRuns = runs || findAccelerationRuns(data);
-
-  let bestTime: number | null = null;
-
-  for (const run of accelerationRuns) {
-    // Проверяем что начальная скорость в пределах допуска от заданной startSpeed
-    if (run.startSpeed > startSpeedThreshold + 5) continue;
-
-    // Ищем момент достижения целевой скорости
-    for (let i = 0; i < run.dataPoints.length; i++) {
-      if (run.dataPoints[i].Speed >= targetSpeed) {
-        const time = (run.dataPoints[i].timestamp - run.startTime) / 1000;
-
-        if (bestTime === null || time < bestTime) {
-          bestTime = time;
-        }
-        break; // Переходим к следующей попытке
-      }
-    }
-  }
-
-  return bestTime;
-}
-
-/**
- * Рассчитывает пиковое ускорение по всему логу (м/с²)
- */
-function calculatePeakAcceleration(data: TripEntry[]): number {
-  let peak = 0;
-  for (let i = 1; i < data.length; i++) {
-    const dt = (data[i].timestamp - data[i - 1].timestamp) / 1000;
-    if (dt > 0) {
-      const dv = (data[i].Speed - data[i - 1].Speed) / 3.6; // км/ч -> м/с
-      const acc = dv / dt;
-      if (acc > peak) peak = acc;
-    }
-  }
-  return peak;
-}
-
-/**
- * Получает результаты ускорения для всех заданных порогов
- * Теперь поддерживает произвольную начальную скорость (startValue)
- */
-export function getAccelerationForThresholds(
-  data: TripEntry[],
-  thresholds: SpeedThreshold[]
-): Record<string, AccelerationResult> {
-  const runs = findAccelerationRuns(data);
-  const results: Record<string, AccelerationResult> = {};
-
-  for (const threshold of thresholds) {
-    let bestTime: number | null = null;
-    let bestRun: AccelerationRun | null = null;
-    const startSpeedLimit = threshold.startValue ?? 0; // Используем startValue если задан, иначе 0
-
-    for (const run of runs) {
-      // Проверяем что начальная скорость в пределах допуска от заданной startValue
-      if (run.startSpeed > startSpeedLimit + 5) continue;
-
-      for (let i = 0; i < run.dataPoints.length; i++) {
-        if (run.dataPoints[i].Speed >= threshold.value) {
-          const time = (run.dataPoints[i].timestamp - run.startTime) / 1000;
-
-          if (bestTime === null || time < bestTime) {
-            bestTime = time;
-            bestRun = run;
-          }
-          break;
-        }
-      }
-    }
-
-    results[threshold.id] = {
-      time: bestTime,
-      timeMs: bestTime !== null ? Math.round(bestTime * 1000) : null,
-      bestRun,
-      allRuns: runs,
-    };
-  }
-
-  return results;
-}
-
-/**
- * Пороги скорости по умолчанию
- */
-export const defaultThresholds: SpeedThreshold[] = [
-  { id: 't25', label: '0-25 км/ч', value: 25, startValue: 0 },
-  { id: 't60', label: '0-60 км/ч', value: 60, startValue: 0 },
-  { id: 't90', label: '0-90 км/ч', value: 90, startValue: 0 },
-  { id: 't100', label: '0-100 км/ч', value: 100, startValue: 0 },
-];
 
 export interface DataFilterConfig {
   enabled: boolean;

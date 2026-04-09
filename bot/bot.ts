@@ -1,11 +1,8 @@
 import { Telegraf, Context, Markup } from 'telegraf';
 import { message } from 'telegraf/filters';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as os from 'os';
 import { parseTripData, calculateSummary, filterData, getAccelerationForThresholds } from '../src/utils/parser.js';
-import { generateChartBuffer, generateSummaryImage } from './chart-generator.js';
-import type { TripEntry, BotTripSummary, AccelerationResult } from './types.js';
+import { generateChartBuffer } from './chart-generator.js';
+import type { TripEntry, BotTripSummary } from './types.js';
 
 const BOT_TOKEN = process.env.BOT_TOKEN || '7919748217:AAH2nLOPmW7XMzEEgfqyuM_pbFcdN5TRJAg';
 

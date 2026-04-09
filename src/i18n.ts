@@ -4,7 +4,7 @@ export const translations = {
   en: {
     // Header
     appTitle: 'WindFighter EUC',
-    appSubtitle: 'Professional EUC telemetry',
+    appSubtitle: 'EUC telemetry',
     uploadCSV: 'Upload CSV',
     dropCSV: 'Drop CSV File',
     dropCSVSubtitle: 'Processing your telemetry data...',
@@ -145,7 +145,7 @@ export const translations = {
   ru: {
     // Header
     appTitle: 'WindFighter EUC',
-    appSubtitle: 'Профессиональная телеметрия EUC',
+    appSubtitle: 'Телеметрия EUC',
     uploadCSV: 'Загрузить CSV',
     dropCSV: 'Перетащите CSV файл',
     dropCSVSubtitle: 'Обработка данных телеметрии...',

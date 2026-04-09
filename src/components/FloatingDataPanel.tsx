@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { X, GripVertical, Lock, LockOpen } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -36,13 +36,13 @@ export function FloatingDataPanel({
   onToggleFreeze
 }: FloatingDataPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const isDragging = useRef(false);
+  const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0, panelX: 0, panelY: 0 });
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     // Only drag from header/grip area
     if ((e.target as HTMLElement).closest('.drag-handle')) {
-      isDragging.current = true;
+      setIsDragging(true);
       dragStart.current = {
         x: e.clientX,
         y: e.clientY,
@@ -54,19 +54,18 @@ export function FloatingDataPanel({
   }, [position]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isDragging.current) return;
-    
-    const deltaX = e.clientX - dragStart.current.x;
-    const deltaY = e.clientY - dragStart.current.y;
-    
-    onPositionChange({
-      x: dragStart.current.panelX + deltaX,
-      y: dragStart.current.panelY + deltaY
-    });
-  }, [onPositionChange]);
+    if (isDragging) {
+      const dx = e.clientX - dragStart.current.x;
+      const dy = e.clientY - dragStart.current.y;
+      onPositionChange({
+        x: dragStart.current.panelX + dx,
+        y: dragStart.current.panelY + dy
+      });
+    }
+  }, [isDragging, onPositionChange]);
 
   const handleMouseUp = useCallback(() => {
-    isDragging.current = false;
+    setIsDragging(false);
   }, []);
 
   if (!isVisible) return null;
@@ -77,9 +76,9 @@ export function FloatingDataPanel({
       className={cn(
         "fixed z-50 bg-slate-900/95 backdrop-blur-xl rounded-xl shadow-2xl",
         "w-[220px] overflow-hidden select-none",
-        isDragging.current && "cursor-grabbing",
-        isFrozen 
-          ? "border-2 border-amber-500/50 shadow-amber-500/20" 
+        isDragging && "cursor-grabbing",
+        isFrozen
+          ? "border-2 border-amber-500/50 shadow-amber-500/20"
           : "border border-white/20"
       )}
       style={{
