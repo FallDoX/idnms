@@ -1,5 +1,5 @@
-import React, { memo } from 'react';
-import { Settings, Eye, EyeOff, Grid3X3 } from 'lucide-react';
+import { memo } from 'react';
+import { Eye, EyeOff, Grid3X3 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import {
@@ -51,10 +51,16 @@ export const AccelerationTable = memo(({
 
   const visibleColumns = Array.from(selectedColumns);
 
+  // Define essential columns that should always be visible
+  const essentialColumns = ['time', 'distance', 'peakPower', 'averagePower'];
+
   return (
     <div className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl border border-white/10 p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-bold text-white">Ускорения</h2>
+        <div>
+          <h2 className="text-lg font-bold text-white">Таблица попыток</h2>
+          <p className="text-xs text-slate-400 mt-1">Детальная статистика всех обнаруженных ускорений</p>
+        </div>
         <button
           onClick={onShowIncompleteToggle}
           className={cn(
@@ -66,26 +72,42 @@ export const AccelerationTable = memo(({
           title={showIncomplete ? "Скрыть неполные попытки" : "Показать неполные попытки"}
         >
           {showIncomplete ? <EyeOff className="w-4 h-4" strokeWidth={2} /> : <Eye className="w-4 h-4" strokeWidth={2} />}
-          <span className="hidden sm:inline">Неполные попытки</span>
+          <span className="hidden sm:inline">Неполные</span>
         </button>
       </div>
 
-      {/* Column Selector */}
+      {/* Column Selector - simplified */}
       <div className="mb-4 p-4 bg-white/5 rounded-xl border border-white/10">
-        <h3 className="text-sm font-semibold text-slate-300 mb-3 uppercase tracking-wider flex items-center gap-2">
-          <Grid3X3 className="w-4 h-4" />
-          Столбцы
-        </h3>
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="text-sm font-semibold text-slate-300 flex items-center gap-2">
+            <Grid3X3 className="w-4 h-4" />
+            Отображаемые столбцы
+          </h3>
+          <button
+            onClick={() => {
+              essentialColumns.forEach(col => onColumnToggle(col));
+            }}
+            className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            Основные
+          </button>
+        </div>
+        <p className="text-xs text-slate-400 mb-3">
+          Выберите метрики для отображения. Основные: время, дистанция, мощность
+        </p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {Object.entries(columnLabels).map(([key, label]) => (
-            <label key={key} className="flex items-center gap-2 cursor-pointer">
+            <label key={key} className="flex items-center gap-2 cursor-pointer group">
               <input
                 type="checkbox"
                 checked={selectedColumns.has(key)}
                 onChange={() => onColumnToggle(key)}
                 className="w-4 h-4 rounded border-white/20 bg-white/5 text-blue-500 focus:ring-blue-500 focus:ring-offset-0"
               />
-              <span className="text-xs text-slate-300">{label}</span>
+              <span className={cn(
+                "text-xs transition-colors",
+                selectedColumns.has(key) ? "text-slate-200" : "text-slate-400 group-hover:text-slate-300"
+              )}>{label}</span>
             </label>
           ))}
         </div>
@@ -95,7 +117,7 @@ export const AccelerationTable = memo(({
       {filteredAttempts.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-white/50 text-sm mb-2">Ускорения не найдены</p>
-          <p className="text-white/30 text-xs">Загрузите CSV файл с данными скорости для обнаружения ускорений.</p>
+          <p className="text-white/30 text-xs">Выберите диапазон выше для обнаружения ускорений</p>
         </div>
       ) : (
         <div className="overflow-x-auto">
