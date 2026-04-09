@@ -204,6 +204,9 @@ function App() {
   // Tab state
   const [activeTab, setActiveTab] = useState<'charts' | 'acceleration'>('charts');
 
+  // Chart mode state
+  const [chartMode, setChartMode] = useState<'telemetry' | 'acceleration'>('telemetry');
+
   // Chart state from custom hook
   const {
     chartToggles,
@@ -1462,6 +1465,21 @@ function App() {
                         <span className="hidden sm:inline">Поделиться</span>
                       </button>
                     </div>
+                  </div>
+
+                  {/* Mode toggle button */}
+                  <div className="flex items-center gap-2 px-2 py-1 bg-slate-800/50 rounded-lg border border-white/5">
+                    <button
+                      onClick={() => setChartMode(prev => prev === 'telemetry' ? 'acceleration' : 'telemetry')}
+                      className={cn(
+                        "px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
+                        chartMode === 'acceleration'
+                          ? "bg-blue-500/20 border-blue-500/40 text-blue-200"
+                          : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
+                      )}
+                    >
+                      Ускорение
+                    </button>
                   </div>
 
                   {/* Toggle chips */}
