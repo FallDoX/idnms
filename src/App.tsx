@@ -16,6 +16,8 @@ import {
 import { parseTripData, calculateSummary, downsample, filterData, defaultFilterConfig, type DataFilterConfig } from './utils/parser';
 import type { TripEntry, TripSummary, AccelerationAttempt } from './types';
 import { AccelerationTab } from './components/AccelerationTab';
+import { AccelerationComparison } from './components/AccelerationComparison';
+import { AccelerationTable } from './components/AccelerationTable';
 import {
   Activity, Clock, Settings, Eye, EyeOff, Grid3X3, ZoomIn, ZoomOut, Play, Upload, BarChart
 } from 'lucide-react';
@@ -197,7 +199,7 @@ function App() {
   }, []);
 
   // Active tab state
-  const [activeTab, setActiveTab] = useState<'charts' | 'acceleration'>('charts');
+  const [activeTab, setActiveTab] = useState<'charts' | 'acceleration' | 'comparison'>('charts');
 
   // Chart state from custom hook
   const {
@@ -1197,6 +1199,43 @@ function App() {
                 onShare={handleShareStats}
               />
 
+              {/* Tab Navigation */}
+              <div className="flex items-center gap-2 mb-4">
+                <button
+                  onClick={() => setActiveTab('charts')}
+                  className={cn(
+                    "px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 border",
+                    activeTab === 'charts'
+                      ? "bg-blue-500/30 border-blue-500/60 text-blue-200"
+                      : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
+                  )}
+                >
+                  Телеметрия
+                </button>
+                <button
+                  onClick={() => setActiveTab('acceleration')}
+                  className={cn(
+                    "px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 border",
+                    activeTab === 'acceleration'
+                      ? "bg-orange-500/30 border-orange-500/60 text-orange-200"
+                      : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
+                  )}
+                >
+                  Ускорения
+                </button>
+                <button
+                  onClick={() => setActiveTab('comparison')}
+                  className={cn(
+                    "px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 border",
+                    activeTab === 'comparison'
+                      ? "bg-purple-500/30 border-purple-500/60 text-purple-200"
+                      : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
+                  )}
+                >
+                  Сравнение
+                </button>
+              </div>
+
               {/* Main Chart with Built-in Time Range & Zoom */}
               <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 shadow-lg">
               {/* Header with tabs and controls */}
@@ -1836,6 +1875,64 @@ function App() {
                 />
               </div>
             </div>
+
+            {/* Comparison Section */}
+            {activeTab === 'comparison' && (
+            <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 shadow-lg mt-6">
+              <div className="p-5 border-b border-white/10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl">
+                      <Activity className="w-5 h-5 text-white" strokeWidth={2.5} />
+                    </div>
+                    <h3 className="text-xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+                      Сравнение ускорений
+                    </h3>
+                  </div>
+                  <button
+                    onClick={clearSelection}
+                    disabled={selectedAttempts.size === 0}
+                    className={cn(
+                      "px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 border",
+                      selectedAttempts.size === 0
+                        ? "bg-slate-700/30 border-slate-600 text-slate-500 cursor-not-allowed"
+                        : "bg-red-500/20 border-red-500/50 text-red-300 hover:bg-red-500/30"
+                    )}
+                  >
+                    Очистить выбор
+                  </button>
+                </div>
+              </div>
+              <div className="p-5">
+                <AccelerationComparison
+                  accelerationAttempts={accelerationAttempts}
+                  selectedAttempts={selectedAttempts}
+                  data={data}
+                />
+                <div className="mt-6">
+                  <AccelerationTable
+                    accelerationAttempts={accelerationAttempts}
+                    showIncomplete={showIncomplete}
+                    selectedColumns={selectedColumns}
+                    onShowIncompleteToggle={() => setShowIncomplete(prev => !prev)}
+                    onColumnToggle={(column) => {
+                      setSelectedColumns(prev => {
+                        const next = new Set(prev);
+                        if (next.has(column)) {
+                          next.delete(column);
+                        } else {
+                          next.add(column);
+                        }
+                        return next;
+                      });
+                    }}
+                    onSelectionToggle={toggleSelection}
+                    selectedAttempts={selectedAttempts}
+                  />
+                </div>
+              </div>
+            </div>
+            )}
           </>
         ) : (
           <div className="relative overflow-hidden bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl h-[500px] flex flex-col items-center justify-center text-center px-6">
