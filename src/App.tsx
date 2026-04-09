@@ -1237,7 +1237,7 @@ function App() {
                       <button
                         onClick={() => setHideIdlePeriods(prev => !prev)}
                         className={cn(
-                          "px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-2",
+                          "px-4 py-2.5 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-2 min-h-[44px]",
                           hideIdlePeriods
                             ? "bg-emerald-500/30 border-emerald-500/60 text-emerald-200"
                             : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
@@ -1252,7 +1252,7 @@ function App() {
                         <button
                           onClick={() => setFilterConfig(prev => ({ ...prev, enabled: !prev.enabled }))}
                           className={cn(
-                            "px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-2",
+                            "px-4 py-2.5 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-2 min-h-[44px]",
                             filterConfig.enabled
                               ? "bg-amber-500/30 border-amber-500/60 text-amber-200"
                               : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
@@ -1307,6 +1307,7 @@ function App() {
                                         value={filterConfig.maxTimeGapSeconds}
                                         onChange={(e) => setFilterConfig(prev => ({ ...prev, maxTimeGapSeconds: parseInt(e.target.value) }))}
                                         className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                                        aria-label="Максимальный разрыв времени в секундах"
                                       />
                                       <div className="flex justify-between text-[10px] text-slate-500 mt-1">
                                         <span>1с</span>
@@ -1334,6 +1335,7 @@ function App() {
                                           value={filterConfig.gpsTeleportSpeedKmh}
                                           onChange={(e) => setFilterConfig(prev => ({ ...prev, gpsTeleportSpeedKmh: parseInt(e.target.value) }))}
                                           className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500"
+                                          aria-label="Лимит GPS скорости в км/ч"
                                         />
                                         <div className="flex justify-between text-[10px] text-slate-500 mt-1">
                                           <span>10</span>

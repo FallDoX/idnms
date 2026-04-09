@@ -220,10 +220,10 @@ export const AccelerationTab = memo(({
               <button
                 key={preset.id}
                 onClick={() => togglePreset(preset.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border relative ${
+                className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all border relative shadow-sm ${
                   selectedPresets.has(preset.id)
-                    ? `${PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS]}20 border ${PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS]}50 text-white`
-                    : 'bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700'
+                    ? `${PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS]}20 border ${PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS]}60 text-white shadow-lg shadow-${PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS]}/20`
+                    : 'bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-600/70 hover:border-slate-500'
                 }`}
               >
                 <span className="flex items-center gap-2">
@@ -231,8 +231,8 @@ export const AccelerationTab = memo(({
                   {attemptCount > 0 && (
                     <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
                       selectedPresets.has(preset.id)
-                        ? 'bg-white/20'
-                        : 'bg-slate-600'
+                        ? 'bg-white/30 text-white'
+                        : 'bg-slate-600 text-slate-300'
                     }`}>
                       {attemptCount}
                     </span>
