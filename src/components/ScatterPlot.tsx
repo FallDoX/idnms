@@ -206,6 +206,7 @@ export function ScatterPlot({ data }: ScatterPlotProps) {
             value={xAxis}
             onChange={(e) => setXAxis(e.target.value as MetricKey)}
             className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500"
+            title="Ось X"
           >
             {availableMetrics.map(m => (
               <option key={m.key} value={m.key} className="bg-slate-900">{m.label}</option>
@@ -219,6 +220,7 @@ export function ScatterPlot({ data }: ScatterPlotProps) {
             value={yAxis}
             onChange={(e) => setYAxis(e.target.value as MetricKey)}
             className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500"
+            title="Ось Y"
           >
             {availableMetrics.map(m => (
               <option key={m.key} value={m.key} className="bg-slate-900">{m.label}</option>
@@ -232,6 +234,7 @@ export function ScatterPlot({ data }: ScatterPlotProps) {
             value={colorMetric}
             onChange={(e) => setColorMetric(e.target.value as MetricKey)}
             className="bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-blue-500"
+            title="Цвет"
           >
             {availableMetrics.map(m => (
               <option key={m.key} value={m.key} className="bg-slate-900">{m.label}</option>

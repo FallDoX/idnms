@@ -1075,7 +1075,7 @@ function App() {
         </header>
 
         {/* Hidden file input for start page upload */}
-        <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} />
+        <input type="file" accept=".csv" className="hidden" onChange={handleFileUpload} aria-label="Загрузить CSV файл" />
 
         {/* Drag overlay */}
         {isDragging && (

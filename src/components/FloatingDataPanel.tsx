@@ -140,14 +140,15 @@ export function FloatingDataPanel({
           >
             {isFrozen ? <Lock className="w-4 h-4" /> : <LockOpen className="w-4 h-4" />}
           </button>
-          <button 
+          <button
             onClick={onClose}
             className={cn(
               "p-1 rounded transition-colors",
-              isFrozen 
-                ? "hover:bg-amber-500/30 text-amber-400 hover:text-amber-200" 
+              isFrozen
+                ? "hover:bg-amber-500/30 text-amber-400 hover:text-amber-200"
                 : "hover:bg-white/10 text-slate-400 hover:text-slate-200"
             )}
+            title="Закрыть"
           >
             <X className="w-4 h-4" />
           </button>

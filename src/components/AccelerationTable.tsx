@@ -156,6 +156,7 @@ export const AccelerationTable = memo(({
               setMaxTemperature(null);
             }}
             className="text-xs text-slate-400 hover:text-slate-200 transition-colors"
+            title="Сбросить фильтры"
           >
             Сбросить
           </button>
