@@ -25,7 +25,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { toPng } from 'html-to-image';
 import { ScatterPlot } from './components/ScatterPlot';
-import { FloatingDataPanel } from './components/FloatingDataPanel';
+import { ChartInfoBar } from './components/ChartInfoBar';
 import { TripOverview } from './components/TripOverview';
 import { i18n } from './i18n';
 import { useChartOptions } from './hooks/useChartOptions';
@@ -197,14 +197,12 @@ function App() {
   // Panels visibility
   const [showSettings, setShowSettings] = useState(false);
 
-  // Floating data panel state
-  const [showFloatingPanel, setShowFloatingPanel] = useState<boolean>(false);
-  const [floatingPanelFrozen, setFloatingPanelFrozen] = useState<boolean>(false);
-  const [floatingPanelPosition, setFloatingPanelPosition] = useState<{ x: number; y: number }>({ x: window.innerWidth * 0.65, y: 200 });
-  const [floatingPanelData, setFloatingPanelData] = useState<{ label: string; value: number | null; color: string; unit?: string }[]>([]);
-  const [floatingPanelTimestamp, setFloatingPanelTimestamp] = useState<string>('');
-  const floatingPanelDataRef = useRef(floatingPanelData);
-  floatingPanelDataRef.current = floatingPanelData;
+  // Info bar state
+  const [showInfoBar, setShowInfoBar] = useState<boolean>(true);
+  const [infoBarData, setInfoBarData] = useState<{ label: string; value: number | null; color: string; unit?: string }[]>([]);
+  const [infoBarTimestamp, setInfoBarTimestamp] = useState<string>('');
+  const infoBarDataRef = useRef(infoBarData);
+  infoBarDataRef.current = infoBarData;
   const [filterConfig, setFilterConfig] = useState<DataFilterConfig>(defaultFilterConfig);
   const [hideIdlePeriods, setHideIdlePeriods] = useState<boolean>(false);
 
@@ -1430,8 +1428,16 @@ function App() {
                 onTouchStart={handleChartTouchStart}
                 onTouchMove={handleChartTouchMove}
                 onTouchEnd={handleChartTouchEnd}
-                onClick={() => showFloatingPanel && setFloatingPanelFrozen(prev => !prev)}
+                onClick={() => showInfoBar && setShowInfoBar(prev => !prev)}
               >
+                {/* Chart Info Bar - integrated at top of chart area */}
+                <ChartInfoBar
+                  data={infoBarData}
+                  timestamp={infoBarTimestamp}
+                  isVisible={showInfoBar}
+                  onClose={() => setShowInfoBar(false)}
+                />
+
                 {/* Chart Controls Overlay */}
                 <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 bg-slate-900/80 backdrop-blur-xl rounded-xl border border-white/10 p-3 shadow-xl pointer-events-auto">
                   <div className="flex items-center gap-1">
@@ -1485,10 +1491,10 @@ function App() {
                     <span className="hidden sm:inline">Привязка</span>
                   </button>
                   <button
-                    onClick={() => setShowFloatingPanel(prev => !prev)}
+                    onClick={() => setShowInfoBar(prev => !prev)}
                     className={cn(
                       "px-2 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-1.5",
-                      showFloatingPanel
+                      showInfoBar
                         ? "bg-pink-500/30 border-pink-500/60 text-pink-200"
                         : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
                     )}
@@ -1645,8 +1651,8 @@ function App() {
                             second: '2-digit'
                           });
 
-                          setFloatingPanelData(newData);
-                          setFloatingPanelTimestamp(timestamp);
+                          setInfoBarData(newData);
+                          setInfoBarTimestamp(timestamp);
                         }, 50),
                         onClick: (_event: unknown, activeElements: unknown[]) => {
                           if (!activeElements.length) return;
@@ -1672,10 +1678,8 @@ function App() {
                             second: '2-digit'
                           });
 
-                          setShowFloatingPanel(true);
-                          setFloatingPanelFrozen(true);
-                          setFloatingPanelData(newData);
-                          setFloatingPanelTimestamp(timestamp);
+                          setInfoBarData(newData);
+                          setInfoBarTimestamp(timestamp);
                         }
                       } as any}
                       data={combinedChartData}
@@ -1815,18 +1819,6 @@ function App() {
                 />
               </div>
             </div>
-
-            {/* Floating Data Panel - draggable overlay */}
-            <FloatingDataPanel
-              data={floatingPanelData}
-              timestamp={floatingPanelTimestamp}
-              isVisible={showFloatingPanel}
-              onClose={() => setShowFloatingPanel(false)}
-              position={floatingPanelPosition}
-              onPositionChange={setFloatingPanelPosition}
-              isFrozen={floatingPanelFrozen}
-              onToggleFreeze={() => setFloatingPanelFrozen(prev => !prev)}
-            />
           </>
         ) : (
           <div className="relative overflow-hidden bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl h-[500px] flex flex-col items-center justify-center text-center px-6">
