@@ -16,6 +16,8 @@ import {
 import { parseTripData, calculateSummary, downsample, filterData, defaultFilterConfig, type DataFilterConfig } from './utils/parser';
 import { detectAccelerations } from './utils/acceleration';
 import type { TripEntry, TripSummary, AccelerationAttempt } from './types';
+import { AccelerationTab } from './components/AccelerationTab';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Activity, Clock, Settings, Eye, EyeOff, Grid3X3, ZoomIn, ZoomOut, Share2, Play, Upload, BarChart
 } from 'lucide-react';
@@ -172,6 +174,9 @@ function App() {
   const [showIncomplete, setShowIncomplete] = useState<boolean>(false);
   const [selectedColumns, setSelectedColumns] = useState<Set<string>>(new Set(['time', 'distance', 'averagePower', 'peakPower', 'batteryDrop']));
   const [accelerationThreshold, setAccelerationThreshold] = useState<number>(60);
+  
+  // Tab state
+  const [activeTab, setActiveTab] = useState<'charts' | 'acceleration'>('charts');
 
   // Chart state from custom hook
   const {
@@ -1285,70 +1290,105 @@ function App() {
                       </div>
                     </div>
 
-                    {/* Chart Display Group */}
-                    <div className="flex items-center gap-1 px-2 py-1 bg-slate-800/50 rounded-lg border border-white/5">
-                      <button
-                        onClick={() => setChartView(chartView === 'line' ? 'scatter' : 'line')}
-                        className={cn(
-                          "px-2 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-1.5",
-                          chartView === 'line'
-                            ? "bg-blue-500/30 border-blue-500/60 text-blue-200"
-                            : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
-                        )}
-                        title="Переключить вид графика: Линейный график / Точечная диаграмма"
-                      >
-                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                        </svg>
-                        <span className="hidden sm:inline">Линия</span>
-                      </button>
-                      <button
-                        onClick={() => setChartView(chartView === 'line' ? 'scatter' : 'line')}
-                        className={cn(
-                          "px-2 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-1.5",
-                          chartView === 'scatter'
-                            ? "bg-purple-500/30 border-purple-500/60 text-purple-200"
-                            : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
-                        )}
-                        title="Переключить вид графика: Линейный график / Точечная диаграмма"
-                      >
-                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <circle cx="12" cy="12" r="1" />
-                          <circle cx="19" cy="5" r="1" />
-                          <circle cx="5" cy="19" r="1" />
-                        </svg>
-                        <span className="hidden sm:inline">Точки</span>
-                      </button>
-                      <button
-                        onClick={() => setChartSnapMode(prev => !prev)}
-                        className={cn(
-                          "px-2 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-1.5",
-                          chartSnapMode
-                            ? "bg-cyan-500/30 border-cyan-500/60 text-cyan-200"
-                            : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
-                        )}
-                        title="Привязка курсора: курсор привязывается к ближайшей точке данных для точного чтения значений"
-                      >
-                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <circle cx="12" cy="12" r="3" />
-                          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-                        </svg>
-                        <span className="hidden sm:inline">Привязка</span>
-                      </button>
-                      <button
-                        onClick={() => setShowFloatingPanel(prev => !prev)}
-                        className={cn(
-                          "px-2 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-1.5",
-                          showFloatingPanel
-                            ? "bg-indigo-500/30 border-indigo-500/60 text-indigo-200"
-                            : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
-                        )}
-                        title="Панель данных: показывает значения в точке курсора (перетаскиваемая)"
-                      >
-                        <Grid3X3 className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">Панель</span>
-                      </button>
-                    </div>
+                    {/* Chart Display Group - Tabs */}
+                    <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'charts' | 'acceleration')} className="w-full">
+                      <TabsList className="bg-slate-800/50 rounded-lg border border-white/5 p-1">
+                        <TabsTrigger value="charts" className="px-3 py-1.5 text-xs font-semibold data-[state=active]:bg-blue-500/30 data-[state=active]:border-blue-500/60 data-[state=active]:text-blue-200">
+                          <BarChart className="w-3.5 h-3.5 mr-1.5" />
+                          Графики
+                        </TabsTrigger>
+                        <TabsTrigger value="acceleration" className="px-3 py-1.5 text-xs font-semibold data-[state=active]:bg-blue-500/30 data-[state=active]:border-blue-500/60 data-[state=active]:text-blue-200">
+                          <Activity className="w-3.5 h-3.5 mr-1.5" />
+                          Ускорения
+                        </TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="charts" className="mt-4">
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 px-2 py-1 bg-slate-800/50 rounded-lg border border-white/5">
+                            <button
+                              onClick={() => setChartView(chartView === 'line' ? 'scatter' : 'line')}
+                              className={cn(
+                                "px-2 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-1.5",
+                                chartView === 'line'
+                                  ? "bg-blue-500/30 border-blue-500/60 text-blue-200"
+                                  : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
+                              )}
+                              title="Переключить вид графика: Линейный график / Точечная диаграмма"
+                            >
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                              </svg>
+                              <span className="hidden sm:inline">Линия</span>
+                            </button>
+                            <button
+                              onClick={() => setChartView(chartView === 'line' ? 'scatter' : 'line')}
+                              className={cn(
+                                "px-2 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-1.5",
+                                chartView === 'scatter'
+                                  ? "bg-purple-500/30 border-purple-500/60 text-purple-200"
+                                  : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
+                              )}
+                              title="Переключить вид графика: Линейный график / Точечная диаграмма"
+                            >
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="12" cy="12" r="1" />
+                                <circle cx="19" cy="5" r="1" />
+                                <circle cx="5" cy="19" r="1" />
+                              </svg>
+                              <span className="hidden sm:inline">Точки</span>
+                            </button>
+                          </div>
+                          <button
+                            onClick={() => setChartSnapMode(prev => !prev)}
+                            className={cn(
+                              "px-2 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-1.5",
+                              chartSnapMode
+                                ? "bg-cyan-500/30 border-cyan-500/60 text-cyan-200"
+                                : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
+                            )}
+                            title="Привязка курсора: курсор привязывается к ближайшей точке данных для точного чтения значений"
+                          >
+                            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <circle cx="12" cy="12" r="3" />
+                              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                            </svg>
+                            <span className="hidden sm:inline">Привязка</span>
+                          </button>
+                          <button
+                            onClick={() => setShowFloatingPanel(prev => !prev)}
+                            className={cn(
+                              "px-2 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-1.5",
+                              showFloatingPanel
+                                ? "bg-indigo-500/30 border-indigo-500/60 text-indigo-200"
+                                : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
+                            )}
+                            title="Панель данных: показывает значения в точке курсора (перетаскиваемая)"
+                          >
+                            <Grid3X3 className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Панель</span>
+                          </button>
+                        </div>
+                      </TabsContent>
+                      <TabsContent value="acceleration" className="mt-4">
+                        <AccelerationTab
+                          accelerationAttempts={accelerationAttempts}
+                          showIncomplete={showIncomplete}
+                          selectedColumns={selectedColumns}
+                          onShowIncompleteToggle={() => setShowIncomplete(prev => !prev)}
+                          onColumnToggle={(column) => {
+                            setSelectedColumns(prev => {
+                              const next = new Set(prev);
+                              if (next.has(column)) {
+                                next.delete(column);
+                              } else {
+                                next.add(column);
+                              }
+                              return next;
+                            });
+                          }}
+                        />
+                      </TabsContent>
+                    </Tabs>
 
                     {/* Zoom Group */}
                     <div className="flex items-center gap-1 px-2 py-1 bg-slate-800/50 rounded-lg border border-white/5">
