@@ -64,6 +64,11 @@ interface TripOverviewProps {
 }
 
 export function TripOverview({ summary, visibleMetrics, showSettings, onSettingsToggle, onVisibleMetricsChange, onFileLoad, onShare }: TripOverviewProps) {
+  const [collapsedSections, setCollapsedSections] = React.useState<Record<string, boolean>>({});
+
+  const toggleSection = (section: string) => {
+    setCollapsedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
   const formatDuration = (ms: number) => {
     const hours = Math.floor(ms / 3600000);
     const minutes = Math.floor((ms % 3600000) / 60000);
@@ -137,157 +142,263 @@ export function TripOverview({ summary, visibleMetrics, showSettings, onSettings
         </div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
-        {/* Speed Metrics */}
-        {visibleMetrics.maxSpeed && summary.maxSpeed > 0 && (
-          <StatCard
-            title={i18n.t('maxSpeed')}
-            value={summary.maxSpeed.toFixed(1)}
-            unit="km/h"
-            icon={Gauge}
-            gradient={{ from: '#3b82f6', to: '#6366f1' }}
-            tooltip="Максимальная скорость достигнутая во время поездки"
-          />
-        )}
-        {visibleMetrics.avgSpeed && summary.avgSpeed > 0 && (
-          <StatCard
-            title={i18n.t('avgSpeed')}
-            value={summary.avgSpeed.toFixed(1)}
-            unit="km/h"
-            icon={Gauge}
-            gradient={{ from: '#6366f1', to: '#8b5cf6' }}
-            tooltip="Средняя скорость за всё время поездки (включая стоянки)"
-          />
-        )}
-        {visibleMetrics.avgMovingSpeed && summary.avgMovingSpeed > 0 && (
-          <StatCard
-            title={i18n.t('avgMovingSpeed')}
-            value={summary.avgMovingSpeed.toFixed(1)}
-            unit="km/h"
-            icon={Gauge}
-            gradient={{ from: '#8b5cf6', to: '#a855f7' }}
-            tooltip="Средняя скорость только во время движения (скорость >5 км/ч)"
-          />
-        )}
-
-        {/* Distance & Time */}
-        {visibleMetrics.distance && summary.totalDistance > 0 && (
-          <StatCard
-            title={i18n.t('distance')}
-            value={summary.totalDistance.toFixed(2)}
-            unit="km"
-            icon={TrendingUp}
-            gradient={{ from: '#10b981', to: '#06b6d4' }}
-            tooltip="Общее расстояние пройденное за поездку"
-          />
-        )}
-        {visibleMetrics.duration && summary.duration > 0 && (
-          <StatCard
-            title={i18n.t('duration')}
-            value={formatDuration(summary.duration)}
-            unit=""
-            icon={Clock}
-            gradient={{ from: '#06b6d4', to: '#3b82f6' }}
-            tooltip="Общее время поездки от старта до финиша"
-          />
-        )}
-        {visibleMetrics.ridingTime && summary.movingDuration > 0 && (
-          <StatCard
-            title={i18n.t('ridingTime')}
-            value={formatDuration(summary.movingDuration)}
-            unit=""
-            icon={Clock}
-            gradient={{ from: '#3b82f6', to: '#6366f1' }}
-            tooltip="Чистое время в движении (без стоянок)"
-          />
+      <div className="space-y-4">
+        {/* Speed Metrics Section */}
+        {(visibleMetrics.maxSpeed || visibleMetrics.avgSpeed || visibleMetrics.avgMovingSpeed) && (
+          <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+            <button
+              onClick={() => toggleSection('speed')}
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors"
+            >
+              <span className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                <Gauge className="w-4 h-4 text-blue-400" />
+                Скорость
+              </span>
+              {collapsedSections.speed ? <Settings className="w-4 h-4 text-slate-400 rotate-[-90deg]" /> : <Settings className="w-4 h-4 text-slate-400 rotate-[180deg]" />}
+            </button>
+            {!collapsedSections.speed && (
+              <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-3 border-t border-white/5">
+                {visibleMetrics.maxSpeed && summary.maxSpeed > 0 && (
+                  <StatCard
+                    title={i18n.t('maxSpeed')}
+                    value={summary.maxSpeed.toFixed(1)}
+                    unit="km/h"
+                    icon={Gauge}
+                    gradient={{ from: '#3b82f6', to: '#6366f1' }}
+                    tooltip="Максимальная скорость достигнутая во время поездки"
+                  />
+                )}
+                {visibleMetrics.avgSpeed && summary.avgSpeed > 0 && (
+                  <StatCard
+                    title={i18n.t('avgSpeed')}
+                    value={summary.avgSpeed.toFixed(1)}
+                    unit="km/h"
+                    icon={Gauge}
+                    gradient={{ from: '#6366f1', to: '#8b5cf6' }}
+                    tooltip="Средняя скорость за всё время поездки (включая стоянки)"
+                  />
+                )}
+                {visibleMetrics.avgMovingSpeed && summary.avgMovingSpeed > 0 && (
+                  <StatCard
+                    title={i18n.t('avgMovingSpeed')}
+                    value={summary.avgMovingSpeed.toFixed(1)}
+                    unit="km/h"
+                    icon={Gauge}
+                    gradient={{ from: '#8b5cf6', to: '#a855f7' }}
+                    tooltip="Средняя скорость только во время движения (скорость >5 км/ч)"
+                  />
+                )}
+              </div>
+            )}
+          </div>
         )}
 
-        {/* Power & Current */}
-        {visibleMetrics.maxPower && summary.maxPower > 0 && (
-          <StatCard
-            title={i18n.t('maxPower')}
-            value={summary.maxPower.toFixed(0)}
-            unit="W"
-            icon={Zap}
-            gradient={{ from: '#f59e0b', to: '#ef4444' }}
-            tooltip="Максимальная потребляемая мощность в Ваттах"
-          />
-        )}
-        {visibleMetrics.maxTorque && summary.maxTorque !== undefined && summary.maxTorque > 0 && (
-          <StatCard
-            title={i18n.t('maxTorque')}
-            value={summary.maxTorque.toFixed(2)}
-            unit=""
-            icon={Zap}
-            gradient={{ from: '#a855f7', to: '#9333ea' }}
-            tooltip="Максимальный крутящий момент двигателя в Н·м"
-          />
-        )}
-        {visibleMetrics.maxPhaseCurrent && summary.maxPhaseCurrent !== undefined && summary.maxPhaseCurrent > 0 && (
-          <StatCard
-            title={i18n.t('maxPhaseI')}
-            value={summary.maxPhaseCurrent.toFixed(1)}
-            unit="A"
-            icon={Zap}
-            gradient={{ from: '#84cc16', to: '#65a30d' }}
-            tooltip="Максимальный фазный ток двигателя в Амперах"
-          />
-        )}
-
-        {/* Battery */}
-        {visibleMetrics.batteryDrop && (
-          <StatCard
-            title={i18n.t('batteryDrop')}
-            value={summary.batteryDrop}
-            unit="%"
-            icon={Battery}
-            gradient={{ from: '#ec4899', to: '#f43f5e' }}
-            tooltip="Общий разряд батареи: разница между зарядом в начале и конце поездки"
-          />
-        )}
-        {visibleMetrics.maxBatteryDrop && summary.maxBatteryDrop !== undefined && summary.maxBatteryDrop > 0 && (
-          <StatCard
-            title={i18n.t('maxBatteryDrop')}
-            value={summary.maxBatteryDrop.toFixed(1)}
-            unit="%"
-            icon={Battery}
-            gradient={{ from: '#f43f5e', to: '#ef4444' }}
-            tooltip="Максимальная просадка от пика: наибольшее падение заряда от максимального уровня во время поездки"
-          />
+        {/* Distance & Time Section */}
+        {(visibleMetrics.distance || visibleMetrics.duration || visibleMetrics.ridingTime) && (
+          <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+            <button
+              onClick={() => toggleSection('distanceTime')}
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors"
+            >
+              <span className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-green-400" />
+                Расстояние и время
+              </span>
+              {collapsedSections.distanceTime ? <Settings className="w-4 h-4 text-slate-400 rotate-[-90deg]" /> : <Settings className="w-4 h-4 text-slate-400 rotate-[180deg]" />}
+            </button>
+            {!collapsedSections.distanceTime && (
+              <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-3 border-t border-white/5">
+                {visibleMetrics.distance && summary.totalDistance > 0 && (
+                  <StatCard
+                    title={i18n.t('distance')}
+                    value={summary.totalDistance.toFixed(2)}
+                    unit="km"
+                    icon={TrendingUp}
+                    gradient={{ from: '#10b981', to: '#06b6d4' }}
+                    tooltip="Общее расстояние пройденное за поездку"
+                  />
+                )}
+                {visibleMetrics.duration && summary.duration > 0 && (
+                  <StatCard
+                    title={i18n.t('duration')}
+                    value={formatDuration(summary.duration)}
+                    unit=""
+                    icon={Clock}
+                    gradient={{ from: '#06b6d4', to: '#3b82f6' }}
+                    tooltip="Общее время поездки от старта до финиша"
+                  />
+                )}
+                {visibleMetrics.ridingTime && summary.movingDuration > 0 && (
+                  <StatCard
+                    title={i18n.t('ridingTime')}
+                    value={formatDuration(summary.movingDuration)}
+                    unit=""
+                    icon={Clock}
+                    gradient={{ from: '#3b82f6', to: '#6366f1' }}
+                    tooltip="Чистое время в движении (без стоянок)"
+                  />
+                )}
+              </div>
+            )}
+          </div>
         )}
 
-        {/* Temperature */}
-        {visibleMetrics.avgTemp && summary.avgTemp !== undefined && summary.avgTemp > 0 && (
-          <StatCard
-            title={i18n.t('avgTemp')}
-            value={summary.avgTemp.toFixed(1)}
-            unit="°C"
-            icon={Thermometer}
-            gradient={{ from: '#f97316', to: '#ef4444' }}
-            tooltip="Средняя температура контроллера за поездку"
-          />
-        )}
-        {visibleMetrics.maxTemp && summary.maxTemp !== undefined && summary.maxTemp > 0 && (
-          <StatCard
-            title={i18n.t('maxTemp')}
-            value={summary.maxTemp.toFixed(1)}
-            unit="°C"
-            icon={Thermometer}
-            gradient={{ from: '#ef4444', to: '#dc2626' }}
-            tooltip="Максимальная температура контроллера достигнутая во время поездки"
-          />
+        {/* Power & Current Section */}
+        {(visibleMetrics.maxPower || visibleMetrics.maxTorque || visibleMetrics.maxPhaseCurrent) && (
+          <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+            <button
+              onClick={() => toggleSection('power')}
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors"
+            >
+              <span className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                <Zap className="w-4 h-4 text-yellow-400" />
+                Мощность и ток
+              </span>
+              {collapsedSections.power ? <Settings className="w-4 h-4 text-slate-400 rotate-[-90deg]" /> : <Settings className="w-4 h-4 text-slate-400 rotate-[180deg]" />}
+            </button>
+            {!collapsedSections.power && (
+              <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-3 border-t border-white/5">
+                {visibleMetrics.maxPower && summary.maxPower > 0 && (
+                  <StatCard
+                    title={i18n.t('maxPower')}
+                    value={summary.maxPower.toFixed(0)}
+                    unit="W"
+                    icon={Zap}
+                    gradient={{ from: '#f59e0b', to: '#ef4444' }}
+                    tooltip="Максимальная потребляемая мощность в Ваттах"
+                  />
+                )}
+                {visibleMetrics.maxTorque && summary.maxTorque !== undefined && summary.maxTorque > 0 && (
+                  <StatCard
+                    title={i18n.t('maxTorque')}
+                    value={summary.maxTorque.toFixed(2)}
+                    unit=""
+                    icon={Zap}
+                    gradient={{ from: '#a855f7', to: '#9333ea' }}
+                    tooltip="Максимальный крутящий момент двигателя в Н·м"
+                  />
+                )}
+                {visibleMetrics.maxPhaseCurrent && summary.maxPhaseCurrent !== undefined && summary.maxPhaseCurrent > 0 && (
+                  <StatCard
+                    title={i18n.t('maxPhaseI')}
+                    value={summary.maxPhaseCurrent.toFixed(1)}
+                    unit="A"
+                    icon={Zap}
+                    gradient={{ from: '#84cc16', to: '#65a30d' }}
+                    tooltip="Максимальный фазный ток двигателя в Амперах"
+                  />
+                )}
+              </div>
+            )}
+          </div>
         )}
 
-        {/* Data */}
+        {/* Battery Section */}
+        {(visibleMetrics.batteryDrop || visibleMetrics.maxBatteryDrop) && (
+          <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+            <button
+              onClick={() => toggleSection('battery')}
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors"
+            >
+              <span className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                <Battery className="w-4 h-4 text-pink-400" />
+                Батарея
+              </span>
+              {collapsedSections.battery ? <Settings className="w-4 h-4 text-slate-400 rotate-[-90deg]" /> : <Settings className="w-4 h-4 text-slate-400 rotate-[180deg]" />}
+            </button>
+            {!collapsedSections.battery && (
+              <div className="p-4 grid grid-cols-2 gap-3 border-t border-white/5">
+                {visibleMetrics.batteryDrop && (
+                  <StatCard
+                    title={i18n.t('batteryDrop')}
+                    value={summary.batteryDrop}
+                    unit="%"
+                    icon={Battery}
+                    gradient={{ from: '#ec4899', to: '#f43f5e' }}
+                    tooltip="Общий разряд батареи: разница между зарядом в начале и конце поездки"
+                  />
+                )}
+                {visibleMetrics.maxBatteryDrop && summary.maxBatteryDrop !== undefined && summary.maxBatteryDrop > 0 && (
+                  <StatCard
+                    title={i18n.t('maxBatteryDrop')}
+                    value={summary.maxBatteryDrop.toFixed(1)}
+                    unit="%"
+                    icon={Battery}
+                    gradient={{ from: '#f43f5e', to: '#ef4444' }}
+                    tooltip="Максимальная просадка от пика: наибольшее падение заряда от максимального уровня во время поездки"
+                  />
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Temperature Section */}
+        {(visibleMetrics.avgTemp || visibleMetrics.maxTemp) && (
+          <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+            <button
+              onClick={() => toggleSection('temperature')}
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors"
+            >
+              <span className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                <Thermometer className="w-4 h-4 text-orange-400" />
+                Температура
+              </span>
+              {collapsedSections.temperature ? <Settings className="w-4 h-4 text-slate-400 rotate-[-90deg]" /> : <Settings className="w-4 h-4 text-slate-400 rotate-[180deg]" />}
+            </button>
+            {!collapsedSections.temperature && (
+              <div className="p-4 grid grid-cols-2 gap-3 border-t border-white/5">
+                {visibleMetrics.avgTemp && summary.avgTemp !== undefined && summary.avgTemp > 0 && (
+                  <StatCard
+                    title={i18n.t('avgTemp')}
+                    value={summary.avgTemp.toFixed(1)}
+                    unit="°C"
+                    icon={Thermometer}
+                    gradient={{ from: '#f97316', to: '#ef4444' }}
+                    tooltip="Средняя температура контроллера за поездку"
+                  />
+                )}
+                {visibleMetrics.maxTemp && summary.maxTemp !== undefined && summary.maxTemp > 0 && (
+                  <StatCard
+                    title={i18n.t('maxTemp')}
+                    value={summary.maxTemp.toFixed(1)}
+                    unit="°C"
+                    icon={Thermometer}
+                    gradient={{ from: '#ef4444', to: '#dc2626' }}
+                    tooltip="Максимальная температура контроллера достигнутая во время поездки"
+                  />
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Data Section */}
         {visibleMetrics.totalSamples && (
-          <StatCard
-            title={i18n.t('totalSamples')}
-            value="N/A"
-            unit=""
-            icon={Activity}
-            gradient={{ from: '#64748b', to: '#475569' }}
-            tooltip="Общее количество точек данных в загруженном файле"
-          />
+          <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+            <button
+              onClick={() => toggleSection('data')}
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors"
+            >
+              <span className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                <Activity className="w-4 h-4 text-slate-400" />
+                Данные
+              </span>
+              {collapsedSections.data ? <Settings className="w-4 h-4 text-slate-400 rotate-[-90deg]" /> : <Settings className="w-4 h-4 text-slate-400 rotate-[180deg]" />}
+            </button>
+            {!collapsedSections.data && (
+              <div className="p-4 border-t border-white/5">
+                <StatCard
+                  title={i18n.t('totalSamples')}
+                  value="N/A"
+                  unit=""
+                  icon={Activity}
+                  gradient={{ from: '#64748b', to: '#475569' }}
+                  tooltip="Общее количество точек данных в загруженном файле"
+                />
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>
