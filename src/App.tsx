@@ -847,6 +847,35 @@ function App() {
     return datasets;
   }, [displayData, hideIdlePeriods, compressedTimeRange, activePeriods]);
 
+  // Acceleration chart data - computes datasets from selected attempts
+  const ATTEMPT_COLORS = [
+    '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+    '#ec4899', '#f97316', '#06b6d4', '#a78bfa', '#fb923c'
+  ];
+
+  const accelerationChartData = useMemo(() => {
+    const datasets = accelerationAttempts
+      .filter((_, index) => selectedAttempts.has(index))
+      .map((attempt, index) => {
+        // Filter data for this attempt's time range
+        const attemptData = data.filter(
+          e => e.timestamp >= attempt.startTimestamp && e.timestamp <= attempt.endTimestamp
+        );
+
+        return {
+          label: `Attempt ${index + 1} (${attempt.startSpeed}-${attempt.endSpeed} км/ч)`,
+          data: attemptData.map(e => ({ x: e.timestamp, y: e.Speed })),
+          borderColor: ATTEMPT_COLORS[index % ATTEMPT_COLORS.length],
+          backgroundColor: `${ATTEMPT_COLORS[index % ATTEMPT_COLORS.length]}20`,
+          fill: false,
+          tension: 0.1,
+          pointRadius: 0,
+        };
+      });
+
+    return { datasets };
+  }, [accelerationAttempts, selectedAttempts, data]);
+
   // Combined chart data with toggles - only constructs final datasets object
   const combinedChartData = useMemo(() => {
     const datasets: Array<{
