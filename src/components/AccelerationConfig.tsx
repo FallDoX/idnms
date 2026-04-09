@@ -9,6 +9,8 @@ interface AccelerationConfigProps {
   onFromSpeedChange: (value: number) => void;
   onToSpeedChange: (value: number) => void;
   onPresetSelect: (from: number, to: number) => void;
+  onFromSpeedBlur?: () => void;
+  onToSpeedBlur?: () => void;
 }
 
 const AccelerationConfig = memo(({ 
@@ -16,7 +18,9 @@ const AccelerationConfig = memo(({
   toSpeed, 
   onFromSpeedChange, 
   onToSpeedChange, 
-  onPresetSelect 
+  onPresetSelect,
+  onFromSpeedBlur,
+  onToSpeedBlur
 }: AccelerationConfigProps) => {
   const presets = [
     { from: 0, to: 25, label: '0-25' },
@@ -26,13 +30,29 @@ const AccelerationConfig = memo(({
   ];
 
   const handleFromSpeedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value) || 0;
-    onFromSpeedChange(value);
+    let value = parseFloat(e.target.value) || 0;
+    // Auto-correct negative values
+    if (value < 0) value = 0;
+    // Auto-swap if from > to
+    if (value > toSpeed) {
+      onFromSpeedChange(toSpeed);
+      onToSpeedChange(value);
+    } else {
+      onFromSpeedChange(value);
+    }
   };
 
   const handleToSpeedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value) || 0;
-    onToSpeedChange(value);
+    let value = parseFloat(e.target.value) || 0;
+    // Auto-correct negative values
+    if (value < 0) value = 0;
+    // Auto-swap if to < from
+    if (value < fromSpeed) {
+      onToSpeedChange(fromSpeed);
+      onFromSpeedChange(value);
+    } else {
+      onToSpeedChange(value);
+    }
   };
 
   return (
@@ -46,6 +66,7 @@ const AccelerationConfig = memo(({
             type="number"
             value={fromSpeed}
             onChange={handleFromSpeedChange}
+            onBlur={onFromSpeedBlur}
             className="w-full"
             placeholder="0"
           />
@@ -56,6 +77,7 @@ const AccelerationConfig = memo(({
             type="number"
             value={toSpeed}
             onChange={handleToSpeedChange}
+            onBlur={onToSpeedBlur}
             className="w-full"
             placeholder="60"
           />

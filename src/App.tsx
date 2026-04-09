@@ -17,6 +17,7 @@ import { parseTripData, calculateSummary, downsample, filterData, defaultFilterC
 import { detectAccelerations } from './utils/acceleration';
 import type { TripEntry, TripSummary, AccelerationAttempt } from './types';
 import { AccelerationTab } from './components/AccelerationTab';
+import AccelerationConfig from './components/AccelerationConfig';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Activity, Clock, Settings, Eye, EyeOff, Grid3X3, ZoomIn, ZoomOut, Share2, Play, Upload, BarChart
@@ -177,19 +178,28 @@ function App() {
   const [fromSpeed, setFromSpeed] = useState<number>(0);
   const [toSpeed, setToSpeed] = useState<number>(60);
 
-  // Threshold change handlers
-  const handleFromSpeedChange = useCallback((value: number) => {
+  // Threshold change handlers with debounce
+  const handleFromSpeedChange = useCallback(throttle((value: number) => {
     setFromSpeed(value);
-  }, []);
+  }, 300), []);
 
-  const handleToSpeedChange = useCallback((value: number) => {
+  const handleToSpeedChange = useCallback(throttle((value: number) => {
     setToSpeed(value);
-  }, []);
+  }, 300), []);
 
   const handlePresetSelect = useCallback((from: number, to: number) => {
     setFromSpeed(from);
     setToSpeed(to);
   }, []);
+
+  // Blur handlers trigger re-detection
+  const handleFromSpeedBlur = useCallback(() => {
+    setAccelerationThreshold(toSpeed);
+  }, [toSpeed]);
+
+  const handleToSpeedBlur = useCallback(() => {
+    setAccelerationThreshold(toSpeed);
+  }, [toSpeed]);
   
   // Tab state
   const [activeTab, setActiveTab] = useState<'charts' | 'acceleration'>('charts');
@@ -1386,6 +1396,15 @@ function App() {
                         </div>
                       </TabsContent>
                       <TabsContent value="acceleration" className="mt-4">
+                        <AccelerationConfig
+                          fromSpeed={fromSpeed}
+                          toSpeed={toSpeed}
+                          onFromSpeedChange={handleFromSpeedChange}
+                          onToSpeedChange={handleToSpeedChange}
+                          onPresetSelect={handlePresetSelect}
+                          onFromSpeedBlur={handleFromSpeedBlur}
+                          onToSpeedBlur={handleToSpeedBlur}
+                        />
                         <AccelerationTab
                           accelerationAttempts={accelerationAttempts}
                           showIncomplete={showIncomplete}
