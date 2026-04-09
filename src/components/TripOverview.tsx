@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Settings, EyeOff, Grid3X3, Gauge, TrendingUp, Clock, Zap, Battery, Thermometer, Activity, Upload } from 'lucide-react';
+import { Settings, EyeOff, Grid3X3, Gauge, TrendingUp, Clock, Zap, Battery, Thermometer, Activity, Upload, Share2 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { i18n } from '../i18n';
@@ -60,9 +60,10 @@ interface TripOverviewProps {
   onSettingsToggle: () => void;
   onVisibleMetricsChange: (key: string) => void;
   onFileLoad: () => void;
+  onShare: () => void;
 }
 
-export function TripOverview({ summary, visibleMetrics, showSettings, onSettingsToggle, onVisibleMetricsChange, onFileLoad }: TripOverviewProps) {
+export function TripOverview({ summary, visibleMetrics, showSettings, onSettingsToggle, onVisibleMetricsChange, onFileLoad, onShare }: TripOverviewProps) {
   const formatDuration = (ms: number) => {
     const hours = Math.floor(ms / 3600000);
     const minutes = Math.floor((ms % 3600000) / 60000);
@@ -84,6 +85,14 @@ export function TripOverview({ summary, visibleMetrics, showSettings, onSettings
           >
             <Upload className="w-4 h-4" strokeWidth={2} />
             <span className="hidden sm:inline">Загрузить</span>
+          </button>
+          <button
+            onClick={onShare}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-300 border text-sm bg-purple-500/20 border-purple-500/40 text-purple-200 hover:bg-purple-500/30"
+            title="Поделиться: сохраняет скриншот всей страницы в PNG"
+          >
+            <Share2 className="w-4 h-4" strokeWidth={2} />
+            <span className="hidden sm:inline">Поделиться</span>
           </button>
           <button
             onClick={onSettingsToggle}

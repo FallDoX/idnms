@@ -18,7 +18,7 @@ import { detectAccelerations } from './utils/acceleration';
 import type { TripEntry, TripSummary, AccelerationAttempt } from './types';
 import { AccelerationTab } from './components/AccelerationTab';
 import {
-  Activity, Clock, Settings, Eye, EyeOff, Grid3X3, ZoomIn, ZoomOut, Share2, Play, Upload, BarChart
+  Activity, Clock, Settings, Eye, EyeOff, Grid3X3, ZoomIn, ZoomOut, Play, Upload, BarChart
 } from 'lucide-react';
 import { throttle } from './utils/performance';
 import { clsx, type ClassValue } from 'clsx';
@@ -1179,6 +1179,7 @@ function App() {
                   const input = document.querySelector('input[type="file"]') as HTMLInputElement;
                   if (input) input.click();
                 }}
+                onShare={handleShareStats}
               />
 
               {/* Main Chart with Built-in Time Range & Zoom */}
@@ -1464,17 +1465,6 @@ function App() {
                       </button>
                     </div>
 
-                    {/* Export Group */}
-                    <div className="flex items-center gap-1 px-2 py-1 bg-slate-800/50 rounded-lg border border-white/5">
-                      <button
-                        onClick={handleShareStats}
-                        className="px-2 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 rounded-lg border border-purple-500/40 transition-all duration-200 flex items-center gap-1.5 text-purple-200"
-                        title="Поделиться: сохраняет скриншот всей страницы в PNG"
-                      >
-                        <Share2 className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">Поделиться</span>
-                      </button>
-                    </div>
                   </div>
 
                   {/* Toggle chips - grouped by data type */}
