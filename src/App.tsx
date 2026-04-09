@@ -200,6 +200,7 @@ function App() {
 
   // Info bar state
   const [showInfoBar, setShowInfoBar] = useState<boolean>(true);
+  const [infoBarFrozen, setInfoBarFrozen] = useState(false);
   const [infoBarData, setInfoBarData] = useState<{ label: string; value: number | null; color: string; unit?: string }[]>([]);
   const [infoBarTimestamp, setInfoBarTimestamp] = useState<string>('');
   const infoBarDataRef = useRef(infoBarData);
@@ -1442,14 +1443,6 @@ function App() {
                 onTouchEnd={handleChartTouchEnd}
                 onClick={() => showInfoBar && setShowInfoBar(prev => !prev)}
               >
-                {/* Chart Info Bar - integrated at top of chart area */}
-                <ChartInfoBar
-                  data={infoBarData}
-                  timestamp={infoBarTimestamp}
-                  isVisible={showInfoBar}
-                  onClose={() => setShowInfoBar(false)}
-                />
-
                 {/* Chart Controls Overlay */}
                 <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 bg-slate-900/80 backdrop-blur-xl rounded-xl border border-white/10 p-3 shadow-xl pointer-events-auto">
                   <div className="flex items-center gap-1">
@@ -1502,19 +1495,6 @@ function App() {
                     </svg>
                     <span className="hidden sm:inline">Привязка</span>
                   </button>
-                  <button
-                    onClick={() => setShowInfoBar(prev => !prev)}
-                    className={cn(
-                      "px-2 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-1.5",
-                      showInfoBar
-                        ? "bg-pink-500/30 border-pink-500/60 text-pink-200"
-                        : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
-                    )}
-                    title={`Показать инфо-шкалу данных: ${showInfoBar ? 'отображает значения всех параметров в точке под курсором (включено)' : 'скрывает инфо-шкалу для более чистого вида графика (выключено)'}. Расположена вверху графика для удобного чтения значений.`}
-                  >
-                    <Activity className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Данные</span>
-                  </button>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => {
@@ -1540,6 +1520,15 @@ function App() {
                     </button>
                   </div>
                 </div>
+
+                {/* Chart Info Bar - positioned above chart like buttons */}
+                <ChartInfoBar
+                  data={infoBarData}
+                  timestamp={infoBarTimestamp}
+                  isVisible={showInfoBar}
+                  isFrozen={infoBarFrozen}
+                  onToggleFreeze={() => setInfoBarFrozen(prev => !prev)}
+                />
 
                 <div className="h-[450px] w-full">
                   {chartView === 'line' ? (
@@ -1640,7 +1629,7 @@ function App() {
                           }
                         },
                         onHover: throttle((_event: unknown, activeElements: unknown[]) => {
-                          if (!activeElements.length) return;
+                          if (!activeElements.length || infoBarFrozen) return;
 
                           const dataIndex = (activeElements as { index: number }[])[0].index;
                           const dataPoint = displayData[dataIndex];
