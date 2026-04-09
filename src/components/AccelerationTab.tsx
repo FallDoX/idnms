@@ -14,6 +14,7 @@ import {
 } from 'chart.js';
 import 'chartjs-adapter-date-fns';
 import { AccelerationTable } from './AccelerationTable';
+import { detectAccelerations } from '../utils/acceleration';
 import type { AccelerationAttempt, TripEntry } from '../types';
 
 ChartJS.register(
@@ -94,52 +95,53 @@ export const AccelerationTab = memo(({
       const preset = PRESETS.find(p => p.id === presetId);
       if (!preset || preset.id === 'custom') return;
 
-      const presetAttempts = accelerationAttempts.filter(
-        attempt => attempt.startSpeed === preset.from && attempt.endSpeed === preset.to
-      );
+      // Detect acceleration attempts for this preset range dynamically (use to speed as target)
+      const presetAttempts = detectAccelerations(data, preset.to);
 
       presetAttempts.forEach((attempt, index) => {
         const attemptData = data.filter(
           e => e.timestamp >= attempt.startTimestamp && e.timestamp <= attempt.endTimestamp
         );
 
-        datasets.push({
-          label: `${preset.label} #${index + 1}`,
-          data: attemptData.map(e => ({ x: e.timestamp, y: e.Speed })),
-          borderColor: PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS],
-          backgroundColor: `${PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS]}20`,
-          fill: false,
-          tension: 0.1,
-          pointRadius: 0,
-        });
+        if (attemptData.length > 0) {
+          datasets.push({
+            label: `${preset.label} #${index + 1}`,
+            data: attemptData.map(e => ({ x: e.timestamp, y: e.Speed })),
+            borderColor: PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS],
+            backgroundColor: `${PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS]}20`,
+            fill: false,
+            tension: 0.1,
+            pointRadius: 0,
+          });
+        }
       });
     });
 
     // Add custom preset if selected
-    if (selectedPresets.has('custom') && fromSpeed >= 0 && toSpeed >= 0) {
-      const customAttempts = accelerationAttempts.filter(
-        attempt => attempt.startSpeed === fromSpeed && attempt.endSpeed === toSpeed
-      );
+    if (selectedPresets.has('custom') && toSpeed >= 0) {
+      const customAttempts = detectAccelerations(data, toSpeed);
 
       customAttempts.forEach((attempt, index) => {
         const attemptData = data.filter(
           e => e.timestamp >= attempt.startTimestamp && e.timestamp <= attempt.endTimestamp
         );
 
-        datasets.push({
-          label: `${fromSpeed}-${toSpeed} #${index + 1}`,
-          data: attemptData.map(e => ({ x: e.timestamp, y: e.Speed })),
-          borderColor: PRESET_COLORS.custom,
-          backgroundColor: `${PRESET_COLORS.custom}20`,
-          fill: false,
-          tension: 0.1,
-          pointRadius: 0,
-        });
+        if (attemptData.length > 0) {
+          datasets.push({
+            label: `${fromSpeed}-${toSpeed} #${index + 1}`,
+            data: attemptData.map(e => ({ x: e.timestamp, y: e.Speed })),
+            borderColor: PRESET_COLORS.custom,
+            backgroundColor: `${PRESET_COLORS.custom}20`,
+            fill: false,
+            tension: 0.1,
+            pointRadius: 0,
+          });
+        }
       });
     }
 
     return { datasets };
-  }, [accelerationAttempts, selectedPresets, data, fromSpeed, toSpeed]);
+  }, [selectedPresets, data, fromSpeed, toSpeed]);
 
   const chartOptions = {
     responsive: true,
