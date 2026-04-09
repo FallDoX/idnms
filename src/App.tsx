@@ -1175,6 +1175,10 @@ function App() {
                 showSettings={showSettings}
                 onSettingsToggle={() => setShowSettings(!showSettings)}
                 onVisibleMetricsChange={(key) => setVisibleMetrics(prev => ({ ...prev, [key]: !prev[key] }))}
+                onFileLoad={() => {
+                  const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+                  if (input) input.click();
+                }}
               />
 
               {/* Main Chart with Built-in Time Range & Zoom */}

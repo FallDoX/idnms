@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Settings, EyeOff, Grid3X3, Gauge, TrendingUp, Clock, Zap, Battery, Thermometer, Activity } from 'lucide-react';
+import { Settings, EyeOff, Grid3X3, Gauge, TrendingUp, Clock, Zap, Battery, Thermometer, Activity, Upload } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { i18n } from '../i18n';
@@ -59,9 +59,10 @@ interface TripOverviewProps {
   showSettings: boolean;
   onSettingsToggle: () => void;
   onVisibleMetricsChange: (key: string) => void;
+  onFileLoad: () => void;
 }
 
-export function TripOverview({ summary, visibleMetrics, showSettings, onSettingsToggle, onVisibleMetricsChange }: TripOverviewProps) {
+export function TripOverview({ summary, visibleMetrics, showSettings, onSettingsToggle, onVisibleMetricsChange, onFileLoad }: TripOverviewProps) {
   const formatDuration = (ms: number) => {
     const hours = Math.floor(ms / 3600000);
     const minutes = Math.floor((ms % 3600000) / 60000);
@@ -75,19 +76,29 @@ export function TripOverview({ summary, visibleMetrics, showSettings, onSettings
     <div className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl border border-white/10 p-6 mb-8">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold text-white">Обзор поездки</h2>
-        <button
-          onClick={onSettingsToggle}
-          className={cn(
-            "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-300 border text-sm",
-            showSettings
-              ? "bg-blue-500/20 border-blue-500/50 text-blue-300"
-              : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
-          )}
-          title={showSettings ? "Свернуть настройки" : "Настройка видимых метрик"}
-        >
-          {showSettings ? <EyeOff className="w-4 h-4" strokeWidth={2} /> : <Settings className="w-4 h-4" strokeWidth={2} />}
-          <span className="hidden sm:inline">{showSettings ? "Свернуть" : "Настройки"}</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onFileLoad}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-300 border text-sm bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
+            title="Загрузить другой файл"
+          >
+            <Upload className="w-4 h-4" strokeWidth={2} />
+            <span className="hidden sm:inline">Загрузить</span>
+          </button>
+          <button
+            onClick={onSettingsToggle}
+            className={cn(
+              "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-300 border text-sm",
+              showSettings
+                ? "bg-blue-500/20 border-blue-500/50 text-blue-300"
+                : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
+            )}
+            title={showSettings ? "Свернуть настройки" : "Настройка видимых метрик"}
+          >
+            {showSettings ? <EyeOff className="w-4 h-4" strokeWidth={2} /> : <Settings className="w-4 h-4" strokeWidth={2} />}
+            <span className="hidden sm:inline">{showSettings ? "Свернуть" : "Настройки"}</span>
+          </button>
+        </div>
       </div>
 
       {/* Settings Panel - expands inside trip overview */}
