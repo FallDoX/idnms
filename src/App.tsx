@@ -174,6 +174,22 @@ function App() {
   const [showIncomplete, setShowIncomplete] = useState<boolean>(false);
   const [selectedColumns, setSelectedColumns] = useState<Set<string>>(new Set(['time', 'distance', 'averagePower', 'peakPower', 'batteryDrop']));
   const [accelerationThreshold, setAccelerationThreshold] = useState<number>(60);
+  const [fromSpeed, setFromSpeed] = useState<number>(0);
+  const [toSpeed, setToSpeed] = useState<number>(60);
+
+  // Threshold change handlers
+  const handleFromSpeedChange = useCallback((value: number) => {
+    setFromSpeed(value);
+  }, []);
+
+  const handleToSpeedChange = useCallback((value: number) => {
+    setToSpeed(value);
+  }, []);
+
+  const handlePresetSelect = useCallback((from: number, to: number) => {
+    setFromSpeed(from);
+    setToSpeed(to);
+  }, []);
   
   // Tab state
   const [activeTab, setActiveTab] = useState<'charts' | 'acceleration'>('charts');
