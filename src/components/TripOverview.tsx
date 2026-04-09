@@ -24,7 +24,7 @@ const StatCard = memo(({ title, value, icon: Icon, unit, gradient, delay = 0, to
   <div
     title={tooltip || `${title}: ${value}${unit ? ' ' + unit : ''}`}
     className={cn(
-      "relative rounded-2xl p-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl group",
+      "relative rounded-xl p-2.5 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl group",
       "bg-gradient-to-br backdrop-blur-xl border border-white/5"
     )}
     style={{
@@ -36,17 +36,17 @@ const StatCard = memo(({ title, value, icon: Icon, unit, gradient, delay = 0, to
     <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
     
     {/* Subtle glow effect */}
-    <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-12 translate-x-12 blur-2xl opacity-50" />
+    <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-white/10 to-transparent rounded-full -translate-y-8 translate-x-8 blur-xl opacity-50" />
     
     <div className="relative z-10">
-      <div className="flex items-start justify-between mb-2">
-        <div className="p-2 bg-white/10 rounded-xl backdrop-blur-sm group-hover:bg-white/20 transition-colors">
-          <Icon className="w-4 h-4 text-white/90" strokeWidth={2} />
+      <div className="flex items-start justify-between mb-1">
+        <div className="p-1.5 bg-white/10 rounded-lg backdrop-blur-sm group-hover:bg-white/20 transition-colors">
+          <Icon className="w-3 h-3 text-white/90" strokeWidth={2} />
         </div>
-        {unit && <span className="text-[10px] font-medium text-white/40 uppercase tracking-wider">{unit}</span>}
+        {unit && <span className="text-[8px] font-medium text-white/40 uppercase tracking-wider">{unit}</span>}
       </div>
-      <p className="text-white/50 text-[10px] font-medium mb-1 uppercase tracking-wider">{title}</p>
-      <p className="text-2xl font-bold text-white tracking-tight">{value}</p>
+      <p className="text-white/50 text-[8px] font-medium mb-0.5 uppercase tracking-wider">{title}</p>
+      <p className="text-lg font-bold text-white tracking-tight">{value}</p>
     </div>
   </div>
 ));
@@ -142,13 +142,13 @@ export function TripOverview({ summary, visibleMetrics, showSettings, onSettings
         </div>
       )}
 
-      <div className="space-y-4">
+      <div className="space-y-2">
         {/* Speed Metrics Section */}
         {(visibleMetrics.maxSpeed || visibleMetrics.avgSpeed || visibleMetrics.avgMovingSpeed) && (
           <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
             <button
               onClick={() => toggleSection('speed')}
-              className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors"
+              className="w-full px-3 py-2 flex items-center justify-between hover:bg-white/5 transition-colors"
             >
               <span className="text-sm font-semibold text-slate-200 flex items-center gap-2">
                 <Gauge className="w-4 h-4 text-blue-400" />
@@ -157,7 +157,7 @@ export function TripOverview({ summary, visibleMetrics, showSettings, onSettings
               {collapsedSections.speed ? <Settings className="w-4 h-4 text-slate-400 rotate-[-90deg]" /> : <Settings className="w-4 h-4 text-slate-400 rotate-[180deg]" />}
             </button>
             {!collapsedSections.speed && (
-              <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-3 border-t border-white/5">
+              <div className="p-3 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 border-t border-white/5">
                 {visibleMetrics.maxSpeed && summary.maxSpeed > 0 && (
                   <StatCard
                     title={i18n.t('maxSpeed')}
@@ -198,7 +198,7 @@ export function TripOverview({ summary, visibleMetrics, showSettings, onSettings
           <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
             <button
               onClick={() => toggleSection('distanceTime')}
-              className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors"
+              className="w-full px-3 py-2 flex items-center justify-between hover:bg-white/5 transition-colors"
             >
               <span className="text-sm font-semibold text-slate-200 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-green-400" />
@@ -207,7 +207,7 @@ export function TripOverview({ summary, visibleMetrics, showSettings, onSettings
               {collapsedSections.distanceTime ? <Settings className="w-4 h-4 text-slate-400 rotate-[-90deg]" /> : <Settings className="w-4 h-4 text-slate-400 rotate-[180deg]" />}
             </button>
             {!collapsedSections.distanceTime && (
-              <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-3 border-t border-white/5">
+              <div className="p-3 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 border-t border-white/5">
                 {visibleMetrics.distance && summary.totalDistance > 0 && (
                   <StatCard
                     title={i18n.t('distance')}
@@ -248,7 +248,7 @@ export function TripOverview({ summary, visibleMetrics, showSettings, onSettings
           <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
             <button
               onClick={() => toggleSection('power')}
-              className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors"
+              className="w-full px-3 py-2 flex items-center justify-between hover:bg-white/5 transition-colors"
             >
               <span className="text-sm font-semibold text-slate-200 flex items-center gap-2">
                 <Zap className="w-4 h-4 text-yellow-400" />
@@ -257,7 +257,7 @@ export function TripOverview({ summary, visibleMetrics, showSettings, onSettings
               {collapsedSections.power ? <Settings className="w-4 h-4 text-slate-400 rotate-[-90deg]" /> : <Settings className="w-4 h-4 text-slate-400 rotate-[180deg]" />}
             </button>
             {!collapsedSections.power && (
-              <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-3 border-t border-white/5">
+              <div className="p-3 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 border-t border-white/5">
                 {visibleMetrics.maxPower && summary.maxPower > 0 && (
                   <StatCard
                     title={i18n.t('maxPower')}
@@ -298,7 +298,7 @@ export function TripOverview({ summary, visibleMetrics, showSettings, onSettings
           <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
             <button
               onClick={() => toggleSection('battery')}
-              className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors"
+              className="w-full px-3 py-2 flex items-center justify-between hover:bg-white/5 transition-colors"
             >
               <span className="text-sm font-semibold text-slate-200 flex items-center gap-2">
                 <Battery className="w-4 h-4 text-pink-400" />
@@ -307,7 +307,7 @@ export function TripOverview({ summary, visibleMetrics, showSettings, onSettings
               {collapsedSections.battery ? <Settings className="w-4 h-4 text-slate-400 rotate-[-90deg]" /> : <Settings className="w-4 h-4 text-slate-400 rotate-[180deg]" />}
             </button>
             {!collapsedSections.battery && (
-              <div className="p-4 grid grid-cols-2 gap-3 border-t border-white/5">
+              <div className="p-3 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 border-t border-white/5">
                 {visibleMetrics.batteryDrop && (
                   <StatCard
                     title={i18n.t('batteryDrop')}
@@ -338,7 +338,7 @@ export function TripOverview({ summary, visibleMetrics, showSettings, onSettings
           <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
             <button
               onClick={() => toggleSection('temperature')}
-              className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors"
+              className="w-full px-3 py-2 flex items-center justify-between hover:bg-white/5 transition-colors"
             >
               <span className="text-sm font-semibold text-slate-200 flex items-center gap-2">
                 <Thermometer className="w-4 h-4 text-orange-400" />
@@ -347,7 +347,7 @@ export function TripOverview({ summary, visibleMetrics, showSettings, onSettings
               {collapsedSections.temperature ? <Settings className="w-4 h-4 text-slate-400 rotate-[-90deg]" /> : <Settings className="w-4 h-4 text-slate-400 rotate-[180deg]" />}
             </button>
             {!collapsedSections.temperature && (
-              <div className="p-4 grid grid-cols-2 gap-3 border-t border-white/5">
+              <div className="p-3 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 border-t border-white/5">
                 {visibleMetrics.avgTemp && summary.avgTemp !== undefined && summary.avgTemp > 0 && (
                   <StatCard
                     title={i18n.t('avgTemp')}
@@ -378,7 +378,7 @@ export function TripOverview({ summary, visibleMetrics, showSettings, onSettings
           <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
             <button
               onClick={() => toggleSection('data')}
-              className="w-full px-4 py-3 flex items-center justify-between hover:bg-white/5 transition-colors"
+              className="w-full px-3 py-2 flex items-center justify-between hover:bg-white/5 transition-colors"
             >
               <span className="text-sm font-semibold text-slate-200 flex items-center gap-2">
                 <Activity className="w-4 h-4 text-slate-400" />
@@ -387,7 +387,7 @@ export function TripOverview({ summary, visibleMetrics, showSettings, onSettings
               {collapsedSections.data ? <Settings className="w-4 h-4 text-slate-400 rotate-[-90deg]" /> : <Settings className="w-4 h-4 text-slate-400 rotate-[180deg]" />}
             </button>
             {!collapsedSections.data && (
-              <div className="p-4 border-t border-white/5">
+              <div className="p-3 border-t border-white/5">
                 <StatCard
                   title={i18n.t('totalSamples')}
                   value="N/A"
