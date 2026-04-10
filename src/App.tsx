@@ -1118,7 +1118,7 @@ function App() {
                   onClick={async () => {
                     setLoading(true);
                     try {
-                      const response = await fetch('/demo-trip-small.csv');
+                      const response = await fetch('./demo-trip-small.csv');
                       const text = await response.text();
                       const parsedData = parseTripData(text);
                       setData(parsedData);
@@ -1148,7 +1148,7 @@ function App() {
                   onClick={async () => {
                     setLoading(true);
                     try {
-                      const response = await fetch('/demo-trip-6hours.csv');
+                      const response = await fetch('./demo-trip-6hours.csv');
                       const text = await response.text();
                       const parsedData = parseTripData(text);
                       setData(parsedData);
