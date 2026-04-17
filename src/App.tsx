@@ -256,6 +256,9 @@ function App() {
   const [infoBarTimestamp, setInfoBarTimestamp] = useState<string>('');
   const infoBarDataRef = useRef(infoBarData);
   infoBarDataRef.current = infoBarData;
+
+  // Current time for GPS map sync
+  const [currentTime, setCurrentTime] = useState<number | undefined>(undefined);
   const [filterConfig, setFilterConfig] = useState<DataFilterConfig>(defaultFilterConfig);
   const [hideIdlePeriods, setHideIdlePeriods] = useState<boolean>(false);
 
@@ -1444,7 +1447,7 @@ function App() {
                     </h3>
                   </div>
                   <div className="p-4">
-                    <GPSMap data={data} height="400px" />
+                    <GPSMap data={data} currentTime={currentTime} height="400px" />
                   </div>
                 </div>
               )}
@@ -1993,6 +1996,9 @@ function App() {
                           const dataIndex = (activeElements as { index: number }[])[0].index;
                           const dataPoint = displayData[dataIndex];
                           if (!dataPoint) return;
+
+                          // Update current time for GPS map sync
+                          setCurrentTime(dataPoint.timestamp);
 
                           const newData = [
                             { label: 'Скорость', value: dataPoint.Speed, color: '#3b82f6', unit: 'км/ч' },
