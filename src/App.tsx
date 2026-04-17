@@ -19,7 +19,7 @@ import { AccelerationTab } from './components/AccelerationTab';
 import { AccelerationComparison } from './components/AccelerationComparison';
 import { AccelerationTable } from './components/AccelerationTable';
 import {
-  Activity, Clock, Settings, Eye, EyeOff, ZoomIn, ZoomOut, Play, Upload, BarChart
+  Activity, Clock, Settings, Eye, EyeOff, ZoomIn, ZoomOut, Play, Upload, BarChart, Lock, Unlock, ChevronRight, ChevronDown
 } from 'lucide-react';
 import { throttle } from './utils/performance';
 import { clsx, type ClassValue } from 'clsx';
@@ -105,29 +105,34 @@ interface ToggleChipProps {
   label: string;
   active: boolean;
   onClick: () => void;
-  color?: 'blue' | 'green' | 'purple' | 'orange' | 'pink';
+  color?: 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'accent';
 }
 
-const ToggleChip = memo(({ label, active, onClick, color = "blue" }: ToggleChipProps) => {
+const ToggleChip = memo(({ label, active, onClick, color = "primary" }: ToggleChipProps) => {
+  // Unified 6-color palette
   const colorMap: Record<string, string> = {
-    blue: "bg-blue-500/20 border-blue-500/30 text-blue-300",
-    green: "bg-emerald-500/20 border-emerald-500/30 text-emerald-300",
-    purple: "bg-purple-500/20 border-purple-500/30 text-purple-300",
-    orange: "bg-orange-500/20 border-orange-500/30 text-orange-300",
-    pink: "bg-pink-500/20 border-pink-500/30 text-pink-300",
+    primary: "bg-[#3b82f6]/20 border-[#3b82f6]/30 text-[#60a5fa]",
+    success: "bg-[#10b981]/20 border-[#10b981]/30 text-[#34d399]",
+    warning: "bg-[#f59e0b]/20 border-[#f59e0b]/30 text-[#fbbf24]",
+    danger: "bg-[#ef4444]/20 border-[#ef4444]/30 text-[#f87171]",
+    info: "bg-[#8b5cf6]/20 border-[#8b5cf6]/30 text-[#a78bfa]",
+    accent: "bg-[#06b6d4]/20 border-[#06b6d4]/30 text-[#22d3ee]",
   };
-  
+
   const activeMap: Record<string, string> = {
-    blue: "bg-blue-500 border-blue-400 text-white",
-    green: "bg-emerald-500 border-emerald-400 text-white",
-    purple: "bg-purple-500 border-purple-400 text-white",
-    orange: "bg-orange-500 border-orange-400 text-white",
-    pink: "bg-pink-500 border-pink-400 text-white",
+    primary: "bg-[#3b82f6] border-[#60a5fa] text-white",
+    success: "bg-[#10b981] border-[#34d399] text-white",
+    warning: "bg-[#f59e0b] border-[#fbbf24] text-white",
+    danger: "bg-[#ef4444] border-[#f87171] text-white",
+    info: "bg-[#8b5cf6] border-[#a78bfa] text-white",
+    accent: "bg-[#06b6d4] border-[#22d3ee] text-white",
   };
 
   return (
     <button
       onClick={onClick}
+      aria-pressed={active}
+      aria-label={`${active ? 'Скрыть' : 'Показать'} ${label}`}
       className={cn(
         "px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200 border flex items-center gap-1.5",
         active ? activeMap[color] : colorMap[color],
@@ -193,8 +198,15 @@ function App() {
     setSelectedAttempts(new Set());
   }, []);
 
-  // Active tab state
-  const [activeTab, setActiveTab] = useState<'charts' | 'acceleration' | 'comparison'>('charts');
+  // Collapsed sections state
+  const [collapsedSections, setCollapsedSections] = React.useState<Record<string, boolean>>({
+    acceleration: false,
+    comparison: false,
+  });
+
+  const toggleSection = (section: string) => {
+    setCollapsedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
 
   // Chart state from custom hook
   const {
@@ -426,6 +438,13 @@ function App() {
       newMax = c + 500;
     }
 
+    // Max range limit (prevent zoom out beyond data bounds)
+    const totalRange = timeRange.end - timeRange.start;
+    if (newMax - newMin > totalRange) {
+      newMin = timeRange.start;
+      newMax = timeRange.end;
+    }
+
     setChartZoom({ min: newMin, max: newMax });
   }, [timeRange]);
 
@@ -519,6 +538,20 @@ function App() {
       }
     }
 
+    // Min range 1 second
+    if (newMax - newMin < 1000) {
+      const c = (newMin + newMax) / 2;
+      newMin = c - 500;
+      newMax = c + 500;
+    }
+
+    // Max range limit (prevent zoom out beyond data bounds)
+    const totalRange = timeRange.end - timeRange.start;
+    if (newMax - newMin > totalRange) {
+      newMin = timeRange.start;
+      newMax = timeRange.end;
+    }
+
     setChartZoom({ min: newMin, max: newMax });
   }, [timeRange]);
 
@@ -601,7 +634,14 @@ function App() {
         newMin = c - 500;
         newMax = c + 500;
       }
-      
+
+      // Max range limit (prevent zoom out beyond data bounds)
+      const totalRange = timeRange.end - timeRange.start;
+      if (newMax - newMin > totalRange) {
+        newMin = timeRange.start;
+        newMax = timeRange.end;
+      }
+
       setChartZoom({ min: newMin, max: newMax });
     } else if (touches.length === 1 && touchState.current.touches.length === 1) {
       // Pan
@@ -621,6 +661,20 @@ function App() {
         newMax = timeRange.end;
       }
       
+      // Min range 1 second
+      if (newMax - newMin < 1000) {
+        const c = (newMin + newMax) / 2;
+        newMin = c - 500;
+        newMax = c + 500;
+      }
+
+      // Max range limit (prevent zoom out beyond data bounds)
+      const totalRange = timeRange.end - timeRange.start;
+      if (newMax - newMin > totalRange) {
+        newMin = timeRange.start;
+        newMax = timeRange.end;
+      }
+
       setChartZoom({ min: newMin, max: newMax });
     }
   }, [timeRange]);
@@ -666,7 +720,14 @@ function App() {
       newMin = c - 500;
       newMax = c + 500;
     }
-    
+
+    // Max range limit (prevent zoom out beyond data bounds)
+    const totalRange = timeRange.end - timeRange.start;
+    if (newMax - newMin > totalRange) {
+      newMin = timeRange.start;
+      newMax = timeRange.end;
+    }
+
     setChartZoom({ min: newMin, max: newMax });
   }, [timeRange, chartZoom]);
 
@@ -705,13 +766,20 @@ function App() {
       newMax = timeRange.end;
     }
     
-    // Min range 1 second
+    // Min range 1 second (prevent too much zoom in)
     if (newMax - newMin < 1000) {
       const c = (newMin + newMax) / 2;
       newMin = c - 500;
       newMax = c + 500;
     }
-    
+
+    // Max range limit (prevent zoom out beyond data bounds)
+    const totalRange = timeRange.end - timeRange.start;
+    if (newMax - newMin > totalRange) {
+      newMin = timeRange.start;
+      newMax = timeRange.end;
+    }
+
     setChartZoom({ min: newMin, max: newMax });
   }, [timeRange, chartZoom]);
 
@@ -831,7 +899,7 @@ function App() {
       datasets.push({
         label: 'Speed (km/h)',
         data: chartDatasets.speed,
-        borderColor: '#3b82f6',
+        borderColor: '#3b82f6', // primary
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
         fill: true,
         tension: 0.1,
@@ -843,7 +911,7 @@ function App() {
       datasets.push({
         label: 'GPS Speed (km/h)',
         data: chartDatasets.gpsSpeed,
-        borderColor: '#10b981',
+        borderColor: '#10b981', // success
         tension: 0.1,
         borderDash: [5, 5],
         yAxisID: 'y',
@@ -854,7 +922,7 @@ function App() {
       datasets.push({
         label: 'Power (W)',
         data: chartDatasets.power,
-        borderColor: '#f59e0b',
+        borderColor: '#f59e0b', // warning
         tension: 0.1,
         yAxisID: 'y1',
       });
@@ -864,7 +932,7 @@ function App() {
       datasets.push({
         label: 'Current (A)',
         data: chartDatasets.current,
-        borderColor: '#ef4444',
+        borderColor: '#ef4444', // danger
         tension: 0.1,
         yAxisID: 'y2',
       });
@@ -874,7 +942,7 @@ function App() {
       datasets.push({
         label: 'Phase Current (A)',
         data: chartDatasets.phaseCurrent,
-        borderColor: '#f87171',
+        borderColor: '#f87171', // danger-light
         tension: 0.1,
         borderDash: [2, 2],
         yAxisID: 'y2',
@@ -885,7 +953,7 @@ function App() {
       datasets.push({
         label: 'Voltage (V)',
         data: chartDatasets.voltage,
-        borderColor: '#8b5cf6',
+        borderColor: '#8b5cf6', // info
         tension: 0.1,
         yAxisID: 'y',
       });
@@ -895,7 +963,7 @@ function App() {
       datasets.push({
         label: 'Battery %',
         data: chartDatasets.batteryLevel,
-        borderColor: '#ec4899',
+        borderColor: '#ec4899', // pink (battery)
         tension: 0.1,
         yAxisID: 'y3',
       });
@@ -905,7 +973,7 @@ function App() {
       datasets.push({
         label: 'Temperature (°C)',
         data: chartDatasets.temperature,
-        borderColor: '#f97316',
+        borderColor: '#f97316', // warning-light
         tension: 0.1,
         yAxisID: 'y',
       });
@@ -915,7 +983,7 @@ function App() {
       datasets.push({
         label: 'Temp 2 (°C)',
         data: chartDatasets.temp2,
-        borderColor: '#fb923c',
+        borderColor: '#fb923c', // orange
         tension: 0.1,
         borderDash: [3, 3],
         yAxisID: 'y',
@@ -926,7 +994,7 @@ function App() {
       datasets.push({
         label: 'Torque',
         data: chartDatasets.torque,
-        borderColor: '#a78bfa',
+        borderColor: '#a78bfa', // info-light
         tension: 0.1,
         yAxisID: 'y4',
       });
@@ -936,7 +1004,7 @@ function App() {
       datasets.push({
         label: 'PWM',
         data: chartDatasets.pwm,
-        borderColor: '#06b6d4',
+        borderColor: '#06b6d4', // accent
         tension: 0.1,
         borderDash: [4, 4],
         yAxisID: 'y5',
@@ -1054,7 +1122,7 @@ function App() {
       
       <div data-export-container className="relative z-10 max-w-[1600px] mx-auto px-6 py-8" onDragOver={onDragOver}>
         {/* Modern Header */}
-        <header className="flex flex-col md:flex-row justify-center items-start md:items-center mb-8 gap-4">
+        <header className="flex flex-col md:flex-row justify-center items-center mb-8 gap-4">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg shadow-blue-500/25">
               <Activity className="w-7 h-7 text-white" strokeWidth={2.5} />
@@ -1194,100 +1262,38 @@ function App() {
                 onShare={handleShareStats}
               />
 
-              {/* Tab Navigation */}
-              <div className="flex items-center gap-2 mb-4">
-                <button
-                  onClick={() => setActiveTab('charts')}
-                  className={cn(
-                    "px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 border",
-                    activeTab === 'charts'
-                      ? "bg-blue-500/30 border-blue-500/60 text-blue-200"
-                      : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
-                  )}
-                >
-                  Телеметрия
-                </button>
-                <button
-                  onClick={() => setActiveTab('acceleration')}
-                  className={cn(
-                    "px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 border",
-                    activeTab === 'acceleration'
-                      ? "bg-orange-500/30 border-orange-500/60 text-orange-200"
-                      : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
-                  )}
-                >
-                  Ускорения
-                </button>
-                <button
-                  onClick={() => setActiveTab('comparison')}
-                  className={cn(
-                    "px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 border",
-                    activeTab === 'comparison'
-                      ? "bg-purple-500/30 border-purple-500/60 text-purple-200"
-                      : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
-                  )}
-                >
-                  Сравнение
-                </button>
-              </div>
-
               {/* Main Chart with Built-in Time Range & Zoom */}
               <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 shadow-lg">
-              {/* Header with tabs and controls */}
-              <div className="p-5 border-b border-white/10">
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl">
-                      <BarChart className="w-5 h-5 text-white" strokeWidth={2.5} />
+              {/* Header with tabs and controls - 2 rows centered */}
+              <div className="p-3 border-b border-white/10">
+                {/* Row 1: Title and Controls */}
+                <div className="flex items-center justify-center gap-4 mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-slate-700/50 rounded-lg">
+                      <BarChart className="w-4 h-4 text-slate-300" strokeWidth={2.5} />
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-                          {i18n.t('tripTelemetry')}
-                        </h3>
-                      </div>
-                      {chartZoom && timeRange && (
-                        <p className="text-xs text-blue-400">
-                          {i18n.t('zoomInfo', { 
-                            minutes: ((chartZoom.max - chartZoom.min) / 60000).toFixed(1), 
-                            percent: ((chartZoom.max - chartZoom.min) / (timeRange.end - timeRange.start) * 100).toFixed(0) 
-                          })}
-                        </p>
-                      )}
-                    </div>
+                    <h3 className="text-base font-bold text-slate-200">
+                      {i18n.t('tripTelemetry')}
+                    </h3>
                   </div>
 
                   {/* Chart Controls - grouped by function */}
-                  <div className="flex items-center gap-3 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {/* Data Processing Group */}
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 rounded-xl border border-white/5">
-                      <button
-                        onClick={() => setHideIdlePeriods(prev => !prev)}
-                        className={cn(
-                          "px-4 py-2.5 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-2 min-h-[44px]",
-                          hideIdlePeriods
-                            ? "bg-emerald-500/30 border-emerald-500/60 text-emerald-200"
-                            : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
-                        )}
-                        title="Скрыть простои: убирает стоянки (скорость <5 км/ч >30 сек)"
-                      >
-                        <Clock className="w-4 h-4" />
-                        <span className="hidden sm:inline">{i18n.t('hideIdlePeriods')}</span>
-                      </button>
-                      <div className="w-px h-6 bg-white/10 mx-1" />
                       <div className="relative">
                         <button
                           onClick={() => setFilterConfig(prev => ({ ...prev, enabled: !prev.enabled }))}
                           className={cn(
                             "px-4 py-2.5 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-2 min-h-[44px]",
-                            filterConfig.enabled
+                            (filterConfig.enabled || hideIdlePeriods)
                               ? "bg-emerald-500/30 border-emerald-500/60 text-emerald-200"
                               : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
                           )}
-                          title="Фильтр данных: удаляет аномалии GPS и разрывы времени"
+                          title="Обработка данных: фильтр аномалий и скрытие простоев"
                         >
-                          <Activity className="w-4 h-4" />
-                          <span className="hidden sm:inline">{i18n.t('dataFilter')}</span>
+                          <Settings className="w-4 h-4" />
+                          <span className="hidden sm:inline">Обработка данных</span>
                           <div
                             onClick={(e) => {
                               e.stopPropagation();
@@ -1307,11 +1313,63 @@ function App() {
                             <div>
                               <div className="flex items-center gap-2 mb-2">
                                 <Settings className="w-4 h-4 text-slate-400" />
-                                <span className="text-sm font-semibold text-slate-200">Настройки фильтра</span>
+                                <span className="text-sm font-semibold text-slate-200">Настройки обработки</span>
                               </div>
                               <p className="text-xs text-slate-400 leading-relaxed">
-                                Удаляет аномалии: скачки GPS скорости выше лимита и разрывы во времени между точками данных.
+                                Управление фильтрацией аномалий и скрытием периодов простоя.
                               </p>
+                            </div>
+
+                            {/* Hide Idle Periods Toggle */}
+                            <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-white/5">
+                              <div className="flex items-center gap-2">
+                                <Clock className={cn("w-4 h-4", hideIdlePeriods ? "text-emerald-400" : "text-slate-400")} />
+                                <div>
+                                  <span className="text-xs font-medium text-slate-200">Скрыть простои</span>
+                                  <p className="text-[10px] text-slate-500">Убирает стоянки (скорость &lt;5 км/ч &gt;30 сек)</p>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => setHideIdlePeriods(prev => !prev)}
+                                className={cn(
+                                  "relative w-11 h-6 rounded-full transition-colors duration-200",
+                                  hideIdlePeriods ? "bg-emerald-500" : "bg-slate-600"
+                                )}
+                                aria-label="Скрыть простои"
+                              >
+                                <span
+                                  className={cn(
+                                    "absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform duration-200",
+                                    hideIdlePeriods ? "translate-x-5" : "translate-x-0"
+                                  )}
+                                />
+                              </button>
+                            </div>
+
+                            {/* Filter Enabled Toggle */}
+                            <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-white/5">
+                              <div className="flex items-center gap-2">
+                                <Activity className={cn("w-4 h-4", filterConfig.enabled ? "text-emerald-400" : "text-slate-400")} />
+                                <div>
+                                  <span className="text-xs font-medium text-slate-200">Фильтр аномалий</span>
+                                  <p className="text-[10px] text-slate-500">Удаляет скачки GPS и разрывы времени</p>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => setFilterConfig(prev => ({ ...prev, enabled: !prev.enabled }))}
+                                className={cn(
+                                  "relative w-11 h-6 rounded-full transition-colors duration-200",
+                                  filterConfig.enabled ? "bg-emerald-500" : "bg-slate-600"
+                                )}
+                                aria-label="Фильтр данных"
+                              >
+                                <span
+                                  className={cn(
+                                    "absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform duration-200",
+                                    filterConfig.enabled ? "translate-x-5" : "translate-x-0"
+                                  )}
+                                />
+                              </button>
                             </div>
                             {filterConfig.enabled && (
                               <>
@@ -1410,10 +1468,10 @@ function App() {
                                 </div>
                               </>
                             )}
-                            {!filterConfig.enabled && (
+                            {!(filterConfig.enabled || hideIdlePeriods) && (
                               <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-800/50 p-3 rounded-lg">
-                                <Activity className="w-4 h-4" />
-                                <span>Включите фильтр для настройки параметров</span>
+                                <Settings className="w-4 h-4" />
+                                <span>Включите обработку данных для настройки параметров</span>
                               </div>
                             )}
                           </div>
@@ -1422,65 +1480,28 @@ function App() {
                     </div>
 
                   </div>
+                </div>
 
-                  {/* Toggle chips - grouped by data type */}
-                  <div className="flex flex-col gap-2">
-                    <button
-                      onClick={() => setShowTelemetryToggles(prev => !prev)}
-                      className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors w-fit"
-                    >
-                      {showTelemetryToggles ? <Settings className="w-3.5 h-3.5 rotate-[180deg]" /> : <Settings className="w-3.5 h-3.5 rotate-[-90deg]" />}
-                      <span>Данные графика</span>
-                    </button>
-                    {showTelemetryToggles && (
-                      <div className="flex flex-wrap gap-2">
-                    {/* Speed */}
-                    <div className="flex items-center gap-1 px-2 py-1 bg-slate-800/30 rounded-lg border border-white/5">
-                      <ToggleChip label={i18n.t('speed')} active={chartToggles.speed} onClick={() => setChartToggles(p => ({...p, speed: !p.speed}))} color="blue" />
-                      {displayData[0]?.GPSSpeed !== undefined && (
-                        <ToggleChip label={i18n.t('gpsSpeed')} active={chartToggles.gpsSpeed} onClick={() => setChartToggles(p => ({...p, gpsSpeed: !p.gpsSpeed}))} color="green" />
-                      )}
-                    </div>
-
-                    {/* Power */}
-                    <div className="flex items-center gap-1 px-2 py-1 bg-slate-800/30 rounded-lg border border-white/5">
-                      <ToggleChip label={i18n.t('power')} active={chartToggles.power} onClick={() => setChartToggles(p => ({...p, power: !p.power}))} color="orange" />
-                      <ToggleChip label={i18n.t('current')} active={chartToggles.current} onClick={() => setChartToggles(p => ({...p, current: !p.current}))} color="pink" />
-                      {displayData[0]?.PhaseCurrent !== undefined && (
-                        <ToggleChip label={i18n.t('phaseCurrent')} active={chartToggles.phaseCurrent} onClick={() => setChartToggles(p => ({...p, phaseCurrent: !p.phaseCurrent}))} color="pink" />
-                      )}
-                    </div>
-
-                    {/* System */}
-                    <div className="flex items-center gap-1 px-2 py-1 bg-slate-800/30 rounded-lg border border-white/5">
-                      <ToggleChip label={i18n.t('voltage')} active={chartToggles.voltage} onClick={() => setChartToggles(p => ({...p, voltage: !p.voltage}))} color="purple" />
-                      <ToggleChip label={i18n.t('batteryPercent')} active={chartToggles.batteryLevel} onClick={() => setChartToggles(p => ({...p, batteryLevel: !p.batteryLevel}))} color="pink" />
-                      <ToggleChip label={i18n.t('temp')} active={chartToggles.temperature} onClick={() => setChartToggles(p => ({...p, temperature: !p.temperature}))} color="orange" />
-                      {displayData[0]?.Temp2 !== undefined && (
-                        <ToggleChip label={i18n.t('temp2')} active={chartToggles.temp2} onClick={() => setChartToggles(p => ({...p, temp2: !p.temp2}))} color="orange" />
-                      )}
-                    </div>
-                    {displayData[0]?.Torque !== undefined && (
-                      <ToggleChip label={i18n.t('torque')} active={chartToggles.torque} onClick={() => setChartToggles(p => ({...p, torque: !p.torque}))} color="purple" />
-                    )}
-                    <ToggleChip label={i18n.t('pwm')} active={chartToggles.pwm} onClick={() => setChartToggles(p => ({...p, pwm: !p.pwm}))} color="blue" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Compact help hints */}
-                  <div className="px-5 pb-2 pt-1">
-                    <p className="text-[10px] text-slate-500">
-                      💡 <b>Подсказки:</b> Скрыть простои — убирает стоянки (скорость &lt;5 км/ч &gt;30 сек) • Фильтр данных — удаляет аномалии GPS и разрывы времени • Поделиться — сохраняет скриншот всей страницы в PNG
-                    </p>
-                  </div>
+                {/* Row 2: Centered hint */}
+                <div className="flex justify-center pt-1">
+                  <p className="text-[10px] text-slate-500 text-center">
+                    💡 Обработка данных — фильтр аномалий и скрытие простоев • Привязка — точное чтение точек
+                  </p>
                 </div>
               </div>
 
               {/* Chart Area with interactive controls */}
-              <div 
-                ref={chartContainerRef} 
-                className="relative p-5 cursor-grab active:cursor-grabbing select-none touch-none"
+              <div
+                ref={chartContainerRef}
+                className="relative cursor-grab active:cursor-grabbing select-none touch-none"
+                style={{
+                  boxSizing: 'border-box',
+                  touchAction: 'auto',
+                  display: 'block',
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none',
+                  WebkitTapHighlightColor: 'rgba(0, 0, 0, 0)',
+                }}
                 onMouseDown={handleChartMouseDown}
                 onMouseMove={handleChartMouseMove}
                 onMouseUp={handleChartMouseUp}
@@ -1490,22 +1511,27 @@ function App() {
                 onTouchStart={handleChartTouchStart}
                 onTouchMove={handleChartTouchMove}
                 onTouchEnd={handleChartTouchEnd}
-                onClick={() => showInfoBar && setShowInfoBar(prev => !prev)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Show info bar and freeze data on chart click
+                  setShowInfoBar(true);
+                  setInfoBarFrozen(true);
+                }}
               >
-                {/* Chart Controls Overlay */}
-                <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 bg-slate-900/80 backdrop-blur-xl rounded-xl border border-white/10 p-3 shadow-xl pointer-events-auto">
+                {/* Chart Controls Overlay - positioned horizontally above canvas */}
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 rounded-xl border border-white/5 mb-3">
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => setChartView('line')}
                       className={cn(
-                        "px-2 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-1.5",
+                        "px-4 py-2.5 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-2 min-h-[44px]",
                         chartView === 'line'
                           ? "bg-blue-500/30 border-blue-500/60 text-blue-200"
                           : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
                       )}
                       title="Линейный график: Показывает данные как непрерывные линии во времени. Идеально для анализа трендов скорости, мощности и других параметров во время поездки."
                     >
-                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                       </svg>
                       <span className="hidden sm:inline">Линия</span>
@@ -1513,14 +1539,14 @@ function App() {
                     <button
                       onClick={() => setChartView('scatter')}
                       className={cn(
-                        "px-2 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-1.5",
+                        "px-4 py-2.5 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-2 min-h-[44px]",
                         chartView === 'scatter'
                           ? "bg-purple-500/30 border-purple-500/60 text-purple-200"
                           : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
                       )}
                       title="Точечная диаграмма: Показывает зависимости между параметрами (например, скорость vs мощность). Полезно для выявления корреляций и аномалий в данных."
                     >
-                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <circle cx="12" cy="12" r="1" />
                         <circle cx="19" cy="5" r="1" />
                         <circle cx="5" cy="19" r="1" />
@@ -1528,22 +1554,46 @@ function App() {
                       <span className="hidden sm:inline">Точки</span>
                     </button>
                   </div>
+                  <div className="w-px h-6 bg-white/10 mx-1" />
                   <button
                     onClick={() => setChartSnapMode(prev => !prev)}
                     className={cn(
-                      "px-2 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-1.5",
+                      "px-4 py-2.5 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-2 min-h-[44px]",
                       chartSnapMode
                         ? "bg-cyan-500/30 border-cyan-500/60 text-cyan-200"
                         : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
                     )}
                     title={`Привязка курсора: ${chartSnapMode ? 'курсор привязывается к ближайшей точке данных для точного чтения значений (включено)' : 'свободное перемещение курсора без привязки к точкам (выключено)'}. Полезно для точного анализа значений в конкретные моменты времени.`}
                   >
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="3" />
-                      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-                    </svg>
+                    {chartSnapMode ? (
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="12" y1="4" x2="12" y2="20" />
+                      </svg>
+                    )}
                     <span className="hidden sm:inline">Привязка</span>
                   </button>
+                  <div className="w-px h-6 bg-white/10 mx-1" />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setInfoBarFrozen(prev => !prev);
+                    }}
+                    className={cn(
+                      "px-4 py-2.5 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-2 min-h-[44px]",
+                      infoBarFrozen
+                        ? "bg-amber-500/30 border-amber-500/60 text-amber-200"
+                        : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
+                    )}
+                    title={`Зафиксировать данные: ${infoBarFrozen ? 'данные зафиксированы, не обновляются при движении курсора (включено)' : 'данные обновляются автоматически при движении курсора (выключено)'}. Полезно для просмотра значений в конкретной точке.`}
+                  >
+                    {infoBarFrozen ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                    <span className="hidden sm:inline">Фикс</span>
+                  </button>
+                  <div className="w-px h-6 bg-white/10 mx-1" />
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => {
@@ -1555,22 +1605,82 @@ function App() {
                         const newRange = currentRange * 0.7;
                         setChartZoom({ min: center - newRange / 2, max: center + newRange / 2 });
                       }}
-                      className="p-1.5 bg-blue-500/20 hover:bg-blue-500/30 rounded-lg border border-blue-500/30 transition-colors active:scale-95"
+                      className="px-4 py-2.5 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-2 min-h-[44px] bg-blue-500/20 border-blue-500/30 text-blue-200 hover:bg-blue-500/30"
                       title="Увеличить масштаб: приблизить к центру текущего видимого диапазона на 30%. Полезно для детального анализа конкретных участков поездки."
                     >
                       <ZoomIn className="w-4 h-4 text-blue-300" />
                     </button>
                     <button
                       onClick={resetZoom}
-                      className="p-1.5 bg-slate-700/50 hover:bg-slate-700 rounded-lg border border-slate-600 transition-colors active:scale-95"
+                      className="px-4 py-2.5 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-2 min-h-[44px] bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
                       title="Сбросить масштаб: вернуть полный вид всей поездки от начала до конца. Возвращает к исходному масштабу для обзора всей поездки."
                     >
-                      <ZoomOut className="w-4 h-4 text-slate-400" />
+                      <ZoomOut className="w-4 h-4" />
+                      <span className="hidden sm:inline">Сброс</span>
                     </button>
+                  </div>
+                  <div className="w-px h-6 bg-white/10 mx-1" />
+                  {/* Telemetry Data Toggle - integrated into controls */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowTelemetryToggles(prev => !prev)}
+                      className={cn(
+                        "px-4 py-2.5 rounded-lg text-xs font-semibold transition-all duration-200 border flex items-center gap-2 min-h-[44px]",
+                        showTelemetryToggles
+                          ? "bg-indigo-500/30 border-indigo-500/60 text-indigo-200"
+                          : "bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-700"
+                      )}
+                      title="Данные графика: показать/скрыть линии данных"
+                    >
+                      <Settings className={cn("w-4 h-4 transition-transform duration-200", showTelemetryToggles ? "rotate-180" : "")} />
+                      <span className="hidden sm:inline">Данные</span>
+                    </button>
+                    {/* Dropdown with telemetry toggles */}
+                    {showTelemetryToggles && (
+                      <div className="absolute top-full right-0 mt-2 w-72 sm:w-80 max-w-[calc(100vw-1rem)] bg-slate-900/95 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl z-[100] p-3 sm:p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Settings className="w-4 h-4 text-slate-400" />
+                          <span className="text-sm font-semibold text-slate-200">Данные графика</span>
+                        </div>
+                        <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto">
+                          {/* Speed */}
+                          <div className="flex flex-wrap items-center gap-1 px-2 py-2 bg-slate-800/30 rounded-lg border border-white/5">
+                            <ToggleChip label={i18n.t('speed')} active={chartToggles.speed} onClick={() => setChartToggles(p => ({...p, speed: !p.speed}))} color="primary" />
+                            {displayData[0]?.GPSSpeed !== undefined && (
+                              <ToggleChip label={i18n.t('gpsSpeed')} active={chartToggles.gpsSpeed} onClick={() => setChartToggles(p => ({...p, gpsSpeed: !p.gpsSpeed}))} color="success" />
+                            )}
+                          </div>
+                          {/* Power */}
+                          <div className="flex flex-wrap items-center gap-1 px-2 py-2 bg-slate-800/30 rounded-lg border border-white/5">
+                            <ToggleChip label={i18n.t('power')} active={chartToggles.power} onClick={() => setChartToggles(p => ({...p, power: !p.power}))} color="warning" />
+                            <ToggleChip label={i18n.t('current')} active={chartToggles.current} onClick={() => setChartToggles(p => ({...p, current: !p.current}))} color="danger" />
+                            {displayData[0]?.PhaseCurrent !== undefined && (
+                              <ToggleChip label={i18n.t('phaseCurrent')} active={chartToggles.phaseCurrent} onClick={() => setChartToggles(p => ({...p, phaseCurrent: !p.phaseCurrent}))} color="danger" />
+                            )}
+                          </div>
+                          {/* System */}
+                          <div className="flex flex-wrap items-center gap-1 px-2 py-2 bg-slate-800/30 rounded-lg border border-white/5">
+                            <ToggleChip label={i18n.t('voltage')} active={chartToggles.voltage} onClick={() => setChartToggles(p => ({...p, voltage: !p.voltage}))} color="info" />
+                            <ToggleChip label={i18n.t('batteryPercent')} active={chartToggles.batteryLevel} onClick={() => setChartToggles(p => ({...p, batteryLevel: !p.batteryLevel}))} color="danger" />
+                            <ToggleChip label={i18n.t('temp')} active={chartToggles.temperature} onClick={() => setChartToggles(p => ({...p, temperature: !p.temperature}))} color="warning" />
+                            {displayData[0]?.Temp2 !== undefined && (
+                              <ToggleChip label={i18n.t('temp2')} active={chartToggles.temp2} onClick={() => setChartToggles(p => ({...p, temp2: !p.temp2}))} color="warning" />
+                            )}
+                          </div>
+                          {/* Torque & PWM */}
+                          <div className="flex flex-wrap items-center gap-1">
+                            {displayData[0]?.Torque !== undefined && (
+                              <ToggleChip label={i18n.t('torque')} active={chartToggles.torque} onClick={() => setChartToggles(p => ({...p, torque: !p.torque}))} color="info" />
+                            )}
+                            <ToggleChip label={i18n.t('pwm')} active={chartToggles.pwm} onClick={() => setChartToggles(p => ({...p, pwm: !p.pwm}))} color="primary" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Chart Info Bar - positioned above chart like buttons */}
+                {/* Chart Info Bar - positioned inside controls container */}
                 <ChartInfoBar
                   data={infoBarData}
                   timestamp={infoBarTimestamp}
@@ -1602,7 +1712,8 @@ function App() {
                             position: 'left',
                             grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
                             ticks: { color: 'rgba(255, 255, 255, 0.5)', font: { size: 11 } },
-                            border: { display: false }
+                            border: { display: false },
+                            title: { display: true, text: 'Speed', color: 'rgba(59, 130, 246, 0.7)', font: { size: 11 } }
                           },
                           y1: {
                             type: 'linear',
@@ -1611,7 +1722,7 @@ function App() {
                             grid: { drawOnChartArea: false },
                             ticks: { color: 'rgba(245, 158, 11, 0.7)', font: { size: 11 } },
                             border: { display: false },
-                            title: { display: true, text: 'Power (W)', color: 'rgba(245, 158, 11, 0.7)', font: { size: 12, weight: 500 } }
+                            title: { display: true, text: 'Power', color: 'rgba(245, 158, 11, 0.7)', font: { size: 11 } }
                           },
                           y2: {
                             type: 'linear',
@@ -1621,7 +1732,7 @@ function App() {
                             offset: chartToggles.current && chartToggles.phaseCurrent,
                             ticks: { color: 'rgba(239, 68, 68, 0.7)', font: { size: 11 } },
                             border: { display: false },
-                            title: { display: true, text: 'Current (A)', color: 'rgba(239, 68, 68, 0.7)', font: { size: 12, weight: 500 } }
+                            title: { display: true, text: 'Current', color: 'rgba(239, 68, 68, 0.7)', font: { size: 11 } }
                           },
                           y3: {
                             type: 'linear',
@@ -1633,7 +1744,7 @@ function App() {
                             max: 100,
                             ticks: { color: 'rgba(236, 72, 153, 0.7)', font: { size: 11 } },
                             border: { display: false },
-                            title: { display: true, text: 'Battery %', color: 'rgba(236, 72, 153, 0.7)', font: { size: 12, weight: 500 } }
+                            title: { display: true, text: 'Battery', color: 'rgba(236, 72, 153, 0.7)', font: { size: 11 } }
                           },
                           y4: {
                             type: 'linear',
@@ -1643,7 +1754,7 @@ function App() {
                             offset: true,
                             ticks: { color: 'rgba(167, 139, 250, 0.7)', font: { size: 11 } },
                             border: { display: false },
-                            title: { display: true, text: 'Torque', color: 'rgba(167, 139, 250, 0.7)', font: { size: 12, weight: 500 } }
+                            title: { display: true, text: 'Torque', color: 'rgba(167, 139, 250, 0.7)', font: { size: 11 } }
                           },
                           y5: {
                             type: 'linear',
@@ -1655,7 +1766,7 @@ function App() {
                             max: 100,
                             ticks: { color: 'rgba(6, 182, 212, 0.7)', font: { size: 11 } },
                             border: { display: false },
-                            title: { display: true, text: 'PWM (%)', color: 'rgba(6, 182, 212, 0.7)', font: { size: 12, weight: 500 } }
+                            title: { display: true, text: 'PWM', color: 'rgba(6, 182, 212, 0.7)', font: { size: 11 } }
                           },
                         },
                         interaction: { 
@@ -1838,82 +1949,97 @@ function App() {
 
             {/* Acceleration Section */}
             <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 shadow-lg mt-6">
-              <div className="p-5 border-b border-white/10">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl">
-                    <Activity className="w-5 h-5 text-white" strokeWidth={2.5} />
-                  </div>
-                  <h3 className="text-xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-                    Ускорения
-                  </h3>
+              <button
+                onClick={() => toggleSection('acceleration')}
+                className="w-full p-3 border-b border-white/10 flex items-center justify-center gap-2 hover:bg-white/5 transition-colors"
+              >
+                <Activity className="w-4 h-4 text-slate-300" strokeWidth={2.5} />
+                <span className="text-base font-bold text-slate-200">
+                  Ускорения
+                </span>
+                {collapsedSections.acceleration ? <ChevronRight className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+              </button>
+              {!collapsedSections.acceleration && (
+                <div className="p-5">
+                  {accelerationAttempts.length === 0 ? (
+                    <div className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl border border-white/10 p-8 text-center">
+                      <p className="text-white/50 text-sm mb-2">Нет попыток для анализа ускорений</p>
+                      <p className="text-white/30 text-xs">Загрузите данные поездки для определения ускорений</p>
+                    </div>
+                  ) : (
+                    <AccelerationTab
+                      accelerationAttempts={accelerationAttempts}
+                      data={data}
+                      clearSettings={clearSettings}
+                    />
+                  )}
                 </div>
-              </div>
-              <div className="p-5">
-                <AccelerationTab
-                  accelerationAttempts={accelerationAttempts}
-                  data={data}
-                  clearSettings={clearSettings}
-                />
-              </div>
+              )}
             </div>
 
             {/* Comparison Section */}
-            {activeTab === 'comparison' && (
             <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 shadow-lg mt-6">
-              <div className="p-5 border-b border-white/10">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl">
-                      <Activity className="w-5 h-5 text-white" strokeWidth={2.5} />
-                    </div>
-                    <h3 className="text-xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-                      Сравнение ускорений
-                    </h3>
-                  </div>
-                  <button
-                    onClick={clearSelection}
-                    disabled={selectedAttempts.size === 0}
+              <button
+                onClick={() => toggleSection('comparison')}
+                className="w-full p-3 border-b border-white/10 flex items-center justify-center gap-3 hover:bg-white/5 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-slate-300" strokeWidth={2.5} />
+                  <span className="text-base font-bold text-slate-200">
+                    Сравнение ускорений
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      clearSelection();
+                    }}
+                    role="button"
+                    tabIndex={0}
                     className={cn(
-                      "px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 border",
+                      "px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 border cursor-pointer",
                       selectedAttempts.size === 0
                         ? "bg-slate-700/30 border-slate-600 text-slate-500 cursor-not-allowed"
                         : "bg-red-500/20 border-red-500/50 text-red-300 hover:bg-red-500/30"
                     )}
                   >
                     Очистить выбор
-                  </button>
+                  </div>
+                  {collapsedSections.comparison ? <ChevronRight className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                 </div>
-              </div>
-              <div className="p-5">
-                <AccelerationComparison
-                  accelerationAttempts={accelerationAttempts}
-                  selectedAttempts={selectedAttempts}
-                  data={data}
-                />
-                <div className="mt-6">
-                  <AccelerationTable
+              </button>
+              {!collapsedSections.comparison && (
+                <div className="p-5">
+                  <AccelerationComparison
                     accelerationAttempts={accelerationAttempts}
-                    showIncomplete={showIncomplete}
-                    selectedColumns={selectedColumns}
-                    onShowIncompleteToggle={() => setShowIncomplete(prev => !prev)}
-                    onColumnToggle={(column) => {
-                      setSelectedColumns(prev => {
-                        const next = new Set(prev);
-                        if (next.has(column)) {
-                          next.delete(column);
-                        } else {
-                          next.add(column);
-                        }
-                        return next;
-                      });
-                    }}
-                    onSelectionToggle={toggleSelection}
                     selectedAttempts={selectedAttempts}
+                    data={data}
                   />
+                  <div className="mt-6">
+                    <AccelerationTable
+                      accelerationAttempts={accelerationAttempts}
+                      showIncomplete={showIncomplete}
+                      selectedColumns={selectedColumns}
+                      onShowIncompleteToggle={() => setShowIncomplete(prev => !prev)}
+                      onColumnToggle={(column) => {
+                        setSelectedColumns(prev => {
+                          const next = new Set(prev);
+                          if (next.has(column)) {
+                            next.delete(column);
+                          } else {
+                            next.add(column);
+                          }
+                          return next;
+                        });
+                      }}
+                      onSelectionToggle={toggleSelection}
+                      selectedAttempts={selectedAttempts}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
-            )}
           </>
         ) : (
           <div className="relative overflow-hidden bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl h-[500px] flex flex-col items-center justify-center text-center px-6">

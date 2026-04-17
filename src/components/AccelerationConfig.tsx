@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo, useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Settings, ChevronDown, ChevronUp, Plus, X } from 'lucide-react';
@@ -22,6 +22,17 @@ const AccelerationConfig = memo(({
   onTemperatureThresholdChange
 }: AccelerationConfigProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const headerButtonRef = useRef<HTMLButtonElement>(null);
+  const firstInputRef = useRef<HTMLInputElement>(null);
+
+  // Move focus to first input when expanding, return to header when collapsing
+  useEffect(() => {
+    if (isExpanded && firstInputRef.current) {
+      firstInputRef.current.focus();
+    } else if (!isExpanded && headerButtonRef.current) {
+      headerButtonRef.current.focus();
+    }
+  }, [isExpanded]);
 
   const presets = [
     { from: 0, to: 25, label: '0-25' },
@@ -75,7 +86,10 @@ const AccelerationConfig = memo(({
     <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-white/10 mb-4">
       {/* Compact header */}
       <button
+        ref={headerButtonRef}
         onClick={() => setIsExpanded(!isExpanded)}
+        aria-expanded={isExpanded}
+        aria-controls="acceleration-config-content"
         className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-700/50 transition-colors"
       >
         <div className="flex items-center gap-2">
@@ -93,30 +107,35 @@ const AccelerationConfig = memo(({
 
       {/* Expandable content */}
       {isExpanded && (
-        <div className="px-4 pb-4 border-t border-white/10 pt-4">
+        <div id="acceleration-config-content" className="px-4 pb-4 border-t border-white/10 pt-4">
           {/* Threshold list */}
           <div className="space-y-2 mb-4">
             {thresholdPairs.map((pair, index) => (
               <div key={index} className="flex items-center gap-2">
                 <div className="flex-1 grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">От</label>
+                    <label htmlFor={`threshold-from-${index}`} className="block text-xs text-slate-400 mb-1">От</label>
                     <Input
+                      id={`threshold-from-${index}`}
+                      ref={index === 0 ? firstInputRef : undefined}
                       type="number"
                       value={pair.from}
                       onChange={(e) => handleFromChange(index, parseFloat(e.target.value) || 0)}
                       className="w-full h-8 text-xs"
                       placeholder="0"
+                      aria-label="Начальная скорость порога"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">До</label>
+                    <label htmlFor={`threshold-to-${index}`} className="block text-xs text-slate-400 mb-1">До</label>
                     <Input
+                      id={`threshold-to-${index}`}
                       type="number"
                       value={pair.to}
                       onChange={(e) => handleToChange(index, parseFloat(e.target.value) || 0)}
                       className="w-full h-8 text-xs"
                       placeholder="60"
+                      aria-label="Конечная скорость порога"
                     />
                   </div>
                 </div>
@@ -124,6 +143,7 @@ const AccelerationConfig = memo(({
                   onClick={() => handleRemove(index)}
                   className="mt-5 px-2 py-1 rounded bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 transition-colors"
                   title="Удалить"
+                  aria-label="Удалить порог"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -137,6 +157,7 @@ const AccelerationConfig = memo(({
             variant="outline"
             size="sm"
             className="w-full mb-4 h-8 text-xs border-dashed"
+            aria-label="Добавить новый порог"
           >
             <Plus className="w-4 h-4 mr-1" />
             Добавить порог
@@ -153,6 +174,7 @@ const AccelerationConfig = memo(({
                   size="sm"
                   onClick={() => handlePresetClick(preset.from, preset.to)}
                   className="h-7 text-xs px-2 bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
+                  aria-label={`Добавить пресет ${preset.label}`}
                 >
                   {preset.label}
                 </Button>
@@ -165,23 +187,27 @@ const AccelerationConfig = memo(({
             <label className="block text-xs text-slate-400 mb-2">Пороги метрик</label>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Макс. мощность (Вт)</label>
+                <label htmlFor="power-threshold" className="block text-xs text-slate-400 mb-1">Макс. мощность (Вт)</label>
                 <Input
+                  id="power-threshold"
                   type="number"
                   value={powerThreshold}
                   onChange={(e) => onPowerThresholdChange(parseFloat(e.target.value) || 2500)}
                   className="w-full h-8 text-xs"
                   placeholder="2500"
+                  aria-label="Порог максимальной мощности в ваттах"
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Макс. температура (°C)</label>
+                <label htmlFor="temperature-threshold" className="block text-xs text-slate-400 mb-1">Макс. температура (°C)</label>
                 <Input
+                  id="temperature-threshold"
                   type="number"
                   value={temperatureThreshold}
                   onChange={(e) => onTemperatureThresholdChange(parseFloat(e.target.value) || 45)}
                   className="w-full h-8 text-xs"
                   placeholder="45"
+                  aria-label="Порог максимальной температуры в градусах Цельсия"
                 />
               </div>
             </div>

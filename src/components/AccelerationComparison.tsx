@@ -224,6 +224,16 @@ export const AccelerationComparison = memo(({
 
   return (
     <div className="space-y-4">
+      {/* Live region for screen reader announcements */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {comparisonFilter === 'all' 
+          ? `Показаны все попытки: ${filteredAttempts.length}`
+          : comparisonFilter === 'best'
+          ? `Показаны лучшие ${filterLimit} попыток из ${selectedAttemptObjects.length}`
+          : `Показаны худшие ${filterLimit} попыток из ${selectedAttemptObjects.length}`
+        }
+      </div>
+
       {/* Header with filter buttons */}
       <div className="flex flex-col items-center gap-3">
         <span className="text-xs text-slate-400 font-medium">Фильтр попыток:</span>
@@ -232,6 +242,7 @@ export const AccelerationComparison = memo(({
             <button
               key={filter}
               onClick={() => setComparisonFilter(filter)}
+              aria-pressed={comparisonFilter === filter}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                 comparisonFilter === filter
                   ? 'bg-blue-500/20 border-blue-500/50 text-blue-300'
@@ -243,6 +254,8 @@ export const AccelerationComparison = memo(({
           ))}
           <button
             onClick={() => setShowPowerCurve(!showPowerCurve)}
+            aria-pressed={showPowerCurve}
+            aria-label={showPowerCurve ? 'Скрыть график мощности' : 'Показать график мощности'}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
               showPowerCurve
                 ? 'bg-green-500/20 border-green-500/50 text-green-300'
@@ -252,8 +265,9 @@ export const AccelerationComparison = memo(({
             Мощность
           </button>
           <div className="flex items-center gap-2 ml-2">
-            <label className="text-xs text-slate-400">Лимит:</label>
+            <label htmlFor="filter-limit" className="text-xs text-slate-400">Лимит:</label>
             <input
+              id="filter-limit"
               type="number"
               min="1"
               max="50"
@@ -265,6 +279,7 @@ export const AccelerationComparison = memo(({
                 }
               }}
               className="w-16 px-2 py-1 rounded-lg text-xs font-semibold bg-slate-700/50 border border-slate-600 text-slate-300 focus:outline-none focus:border-blue-500"
+              aria-label="Лимит количества попыток"
             />
           </div>
         </div>
