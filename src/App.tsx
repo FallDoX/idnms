@@ -20,8 +20,9 @@ import { AccelerationTab } from './components/AccelerationTab';
 import { AccelerationComparison } from './components/AccelerationComparison';
 import { AccelerationTable } from './components/AccelerationTable';
 import { SettingsPanel } from './components/SettingsPanel';
+import { GPSMap } from './components/GPSMap';
 import {
-  Activity, Clock, Settings, Eye, EyeOff, ZoomIn, ZoomOut, Play, Upload, BarChart, Lock, Unlock, ChevronRight, ChevronDown
+  Activity, Clock, Settings, Eye, EyeOff, ZoomIn, ZoomOut, Play, Upload, BarChart, Lock, Unlock, ChevronRight, ChevronDown, MapPin
 } from 'lucide-react';
 import { throttle } from './utils/performance';
 import { clsx, type ClassValue } from 'clsx';
@@ -165,6 +166,7 @@ function App() {
   const [fileName, setFileName] = useState<string>('');
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showTelemetryToggles, setShowTelemetryToggles] = useState(false);
+  const [showMap, setShowMap] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Time range state
@@ -237,6 +239,11 @@ function App() {
   } = useChartState();
 
   const chartContainerRef = useRef<HTMLDivElement>(null);
+
+  // Check if GPS data is available
+  const hasGPSData = useMemo(() => {
+    return data.length > 0 && data.some(entry => entry.Latitude !== undefined && entry.Longitude !== undefined);
+  }, [data]);
 
   // Panels visibility
   const [showSettings, setShowSettings] = useState(false);
@@ -1280,6 +1287,21 @@ function App() {
           >
             <Settings className="w-5 h-5" />
           </button>
+          {hasGPSData && (
+            <button
+              onClick={() => setShowMap(!showMap)}
+              className={cn(
+                "p-3 border rounded-xl transition-colors",
+                showMap
+                  ? "bg-blue-500/30 border-blue-500/60 text-blue-200"
+                  : "bg-slate-800/50 border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-white"
+              )}
+              aria-label={showMap ? "Скрыть карту" : "Показать карту"}
+              title={showMap ? "Скрыть карту" : "Показать карту"}
+            >
+              <MapPin className="w-5 h-5" />
+            </button>
+          )}
         </header>
 
         {/* Hidden file input for start page upload */}
@@ -1413,6 +1435,19 @@ function App() {
           <>
             {/* Trip Data Section - Overview and Telemetry */}
             <div className="space-y-6">
+              {showMap && hasGPSData && (
+                <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 shadow-lg">
+                  <div className="p-4 border-b border-white/10">
+                    <h3 className="text-lg font-bold text-slate-200 flex items-center gap-2">
+                      <MapPin className="w-5 h-5 text-blue-400" />
+                      GPS Трек
+                    </h3>
+                  </div>
+                  <div className="p-4">
+                    <GPSMap data={data} height="400px" />
+                  </div>
+                </div>
+              )}
               <TripOverview
                 summary={filteredSummary!}
                 visibleMetrics={visibleMetrics}
