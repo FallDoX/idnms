@@ -14,6 +14,7 @@ import {
   Filler
 } from 'chart.js';
 import { parseTripData, calculateSummary, downsample, filterData, defaultFilterConfig, type DataFilterConfig } from './utils/parser';
+import { loadSettings, saveSettings } from './utils/settings';
 import type { TripEntry, TripSummary } from './types';
 import { AccelerationTab } from './components/AccelerationTab';
 import { AccelerationComparison } from './components/AccelerationComparison';
@@ -238,6 +239,36 @@ function App() {
   infoBarDataRef.current = infoBarData;
   const [filterConfig, setFilterConfig] = useState<DataFilterConfig>(defaultFilterConfig);
   const [hideIdlePeriods, setHideIdlePeriods] = useState<boolean>(false);
+
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    const settings = loadSettings();
+    
+    // Apply chart toggles if available
+    if (settings.chartToggles) {
+      setChartToggles(settings.chartToggles);
+    }
+    
+    // Apply hideIdlePeriods if available
+    if (settings.hideIdlePeriods !== undefined) {
+      setHideIdlePeriods(settings.hideIdlePeriods);
+    }
+    
+    // Apply chartView if available
+    if (settings.chartView) {
+      setChartView(settings.chartView);
+    }
+  }, [setChartToggles, setChartView]);
+
+  // Auto-save settings when they change
+  useEffect(() => {
+    const settingsToSave = {
+      chartToggles,
+      hideIdlePeriods,
+      chartView,
+    };
+    saveSettings(settingsToSave);
+  }, [chartToggles, hideIdlePeriods, chartView]);
 
   // Filter data by time range AND apply data quality filter AND optionally hide idle periods
   const filteredData = useMemo(() => {
