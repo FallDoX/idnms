@@ -4,10 +4,10 @@ import { parseTripData, calculateSummary, filterData, getAccelerationForThreshol
 import { generateChartBuffer } from './chart-generator.js';
 import type { TripEntry, BotTripSummary } from './types.js';
 
-const BOT_TOKEN = process.env.BOT_TOKEN || '7919748217:AAH2nLOPmW7XMzEEgfqyuM_pbFcdN5TRJAg';
+const BOT_TOKEN = process.env.BOT_TOKEN;
 
 if (!BOT_TOKEN) {
-  console.error('BOT_TOKEN not set!');
+  console.error('BOT_TOKEN environment variable is required!');
   process.exit(1);
 }
 
