@@ -273,8 +273,15 @@ export const AccelerationComparison = memo(({
       {/* Empty state */}
       {filteredAttempts.length === 0 ? (
         <div className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl border border-white/10 p-12 text-center">
-          <p className="text-white/50 text-sm mb-2">Нет выбранных попыток</p>
-          <p className="text-white/30 text-xs">Выберите попытки в таблице для сравнения</p>
+          <div className="flex flex-col items-center gap-4">
+            <svg className="w-16 h-16 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <div>
+              <p className="text-white/50 text-sm mb-2">Нет выбранных попыток</p>
+              <p className="text-white/30 text-xs">Выберите попытки в таблице для сравнения</p>
+            </div>
+          </div>
         </div>
       ) : (
         <>
