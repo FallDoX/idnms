@@ -78,8 +78,9 @@ export const AccelerationTab = memo(({
       const preset = PRESETS.find(p => p.id === presetId);
       if (!preset || preset.id === 'custom') return;
 
+      // Filter attempts that reach at least the preset target speed
       const presetAttempts = accelerationAttempts.filter(
-        attempt => Math.abs(attempt.thresholdPair.from - preset.from) < 1 && Math.abs(attempt.thresholdPair.to - preset.to) < 1
+        attempt => attempt.thresholdPair.to >= preset.to && attempt.thresholdPair.from === preset.from
       );
 
       presetAttempts.forEach(attempt => {
@@ -96,7 +97,7 @@ export const AccelerationTab = memo(({
     const timeRange = maxDuration > 0 ? { start: 0, end: maxDuration } : null;
     console.log('timeRange calculated:', { maxDuration, timeRange, selectedPresets: Array.from(selectedPresets) });
     return timeRange;
-  }, [accelerationAttempts, selectedPresets]);
+  }, [accelerationAttempts, selectedPresets, PRESETS]);
 
   const accelerationChartData = useMemo(() => {
     const datasets: Array<{
