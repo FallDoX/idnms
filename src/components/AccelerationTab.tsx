@@ -324,6 +324,15 @@ export const AccelerationTab = memo(({
               // Use original index to match colors with chart lines
               const originalIndex = accelerationAttempts.findIndex(a => a.id === attempt.id);
               const color = ATTEMPT_COLORS[originalIndex % ATTEMPT_COLORS.length];
+              
+              // Get selected presets that match this attempt
+              const matchingPresets = PRESETS.filter(preset => 
+                preset.id !== 'custom' && 
+                selectedPresets.has(preset.id) &&
+                attempt.thresholdPair.to >= preset.to && 
+                attempt.thresholdPair.from === preset.from
+              ).map(p => p.label);
+              
               return (
                 <button
                   key={attempt.id}
@@ -342,6 +351,11 @@ export const AccelerationTab = memo(({
                   <span className="font-bold text-xs">#{sortedIndex + 1}</span>
                   <span className="text-[9px] opacity-90">{attempt.thresholdPair.to} км/ч</span>
                   <span className="text-[9px] opacity-75">{attempt.time.toFixed(2)}с</span>
+                  {matchingPresets.length > 0 && (
+                    <span className="text-[8px] opacity-60 mt-0.5">
+                      {matchingPresets.join(', ')}
+                    </span>
+                  )}
                 </button>
               );
             })}
