@@ -38,6 +38,12 @@ export const AccelerationTab = memo(({
 }: AccelerationTabProps) => {
   const [selectedPresets, setSelectedPresets] = useState<Set<string>>(new Set());
 
+  // Custom presets state
+  const [customPresets, setCustomPresets] = useState<Array<{ id: string; from: number; to: number; label: string }>>([]);
+  const [showCustomPresetForm, setShowCustomPresetForm] = useState(false);
+  const [newPresetFrom, setNewPresetFrom] = useState('');
+  const [newPresetTo, setNewPresetTo] = useState('');
+
   // Visibility state for individual attempts
   const [visibleAttempts, setVisibleAttempts] = useState<Set<string>>(new Set());
 
@@ -70,12 +76,48 @@ export const AccelerationTab = memo(({
     });
   };
 
+  const addCustomPreset = () => {
+    const from = parseFloat(newPresetFrom);
+    const to = parseFloat(newPresetTo);
+    
+    if (isNaN(from) || isNaN(to) || from >= to) {
+      alert('Введите корректные значения (от < до)');
+      return;
+    }
+
+    const newPreset = {
+      id: `custom-${Date.now()}`,
+      from,
+      to,
+      label: `${from}-${to}`,
+    };
+
+    setCustomPresets(prev => [...prev, newPreset]);
+    setNewPresetFrom('');
+    setNewPresetTo('');
+    setShowCustomPresetForm(false);
+  };
+
+  const removeCustomPreset = (presetId: string) => {
+    setCustomPresets(prev => prev.filter(p => p.id !== presetId));
+    setSelectedPresets(prev => {
+      const next = new Set(prev);
+      next.delete(presetId);
+      return next;
+    });
+  };
+
+  // Combine standard presets with custom presets
+  const allPresets = useMemo(() => {
+    return [...PRESETS, ...customPresets];
+  }, [customPresets]);
+
   // Calculate time range from selected attempts (in seconds from start)
   const timeRange = useMemo(() => {
     let maxDuration = 0;
 
     selectedPresets.forEach(presetId => {
-      const preset = PRESETS.find(p => p.id === presetId);
+      const preset = allPresets.find(p => p.id === presetId);
       if (!preset || preset.id === 'custom') return;
 
       // Filter attempts that reach at least the preset target speed
@@ -96,7 +138,7 @@ export const AccelerationTab = memo(({
 
     const timeRange = maxDuration > 0 ? { start: 0, end: maxDuration } : null;
     return timeRange;
-  }, [accelerationAttempts, selectedPresets, PRESETS]);
+  }, [accelerationAttempts, selectedPresets, allPresets]);
 
   const accelerationChartData = useMemo(() => {
     const datasets: Array<{
@@ -110,7 +152,7 @@ export const AccelerationTab = memo(({
     }> = [];
 
     selectedPresets.forEach(presetId => {
-      const preset = PRESETS.find(p => p.id === presetId);
+      const preset = allPresets.find(p => p.id === presetId);
       if (!preset || preset.id === 'custom') return;
 
       // Filter attempts that reach at least the preset target speed
@@ -271,12 +313,15 @@ export const AccelerationTab = memo(({
       {/* Preset selector */}
       <div className="flex items-center justify-center gap-2 flex-wrap">
         <div className="flex flex-wrap gap-2 md:gap-3 justify-center">
-          {PRESETS.map((preset) => {
+          {allPresets.map((preset) => {
             const attemptCount = preset.id === 'custom'
               ? accelerationAttempts.length
               : accelerationAttempts.filter(
                   attempt => attempt.thresholdPair.to >= preset.to && attempt.thresholdPair.from === preset.from
                 ).length;
+
+            const isCustom = preset.id.startsWith('custom-');
+            const presetColor = isCustom ? '#8b5cf6' : PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS];
 
             return (
               <button
@@ -286,7 +331,7 @@ export const AccelerationTab = memo(({
                 title={`Разгон ${preset.label} км/ч. ${attemptCount > 0 ? `Найдено попыток: ${attemptCount}` : 'Нет попыток'}`}
                 className={`px-3 py-2 md:px-4 md:py-2.5 rounded-lg text-xs md:text-sm font-semibold transition-all border relative shadow-sm min-h-[44px] ${
                   selectedPresets.has(preset.id)
-                    ? `${PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS]}20 border ${PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS]}60 text-white shadow-lg shadow-${PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS]}/20`
+                    ? `${presetColor}20 border ${presetColor}60 text-white shadow-lg shadow-${presetColor}/20`
                     : 'bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-600/70 hover:border-slate-500'
                 }`}
               >
@@ -301,17 +346,85 @@ export const AccelerationTab = memo(({
                       {attemptCount}
                     </span>
                   )}
+                  {isCustom && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeCustomPreset(preset.id);
+                      }}
+                      className="ml-1 w-4 h-4 rounded-full bg-red-500/20 hover:bg-red-500/40 text-red-400 flex items-center justify-center text-[10px]"
+                      aria-label={`Удалить пресет ${preset.label}`}
+                    >
+                      ×
+                    </button>
+                  )}
                 </span>
               </button>
             );
           })}
         </div>
+        <button
+          onClick={() => setShowCustomPresetForm(!showCustomPresetForm)}
+          className="px-3 py-2 rounded-lg text-xs font-semibold bg-purple-500/20 border border-purple-500/30 text-purple-300 hover:bg-purple-500/30 transition-all min-h-[44px]"
+          aria-label="Добавить кастомный пресет"
+        >
+          + Кастом
+        </button>
         {selectedPresets.has('custom') && (
           <span className="text-xs text-slate-500">
             (все попытки)
           </span>
         )}
       </div>
+
+      {/* Custom preset form */}
+      {showCustomPresetForm && (
+        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 space-y-3">
+          <h3 className="text-sm font-semibold text-slate-300">Добавить кастомный пресет</h3>
+          <div className="flex gap-2 items-center">
+            <div className="flex-1">
+              <label className="text-xs text-slate-400 block mb-1">От (км/ч)</label>
+              <input
+                type="number"
+                value={newPresetFrom}
+                onChange={(e) => setNewPresetFrom(e.target.value)}
+                className="w-full px-3 py-2 rounded bg-slate-700 border border-slate-600 text-slate-300 text-sm focus:outline-none focus:border-purple-500"
+                placeholder="0"
+                min="0"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="text-xs text-slate-400 block mb-1">До (км/ч)</label>
+              <input
+                type="number"
+                value={newPresetTo}
+                onChange={(e) => setNewPresetTo(e.target.value)}
+                className="w-full px-3 py-2 rounded bg-slate-700 border border-slate-600 text-slate-300 text-sm focus:outline-none focus:border-purple-500"
+                placeholder="60"
+                min="0"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={addCustomPreset}
+              className="px-4 py-2 rounded bg-purple-500/20 border border-purple-500/30 text-purple-300 hover:bg-purple-500/30 transition-all text-sm font-semibold"
+            >
+              Добавить
+            </button>
+            <button
+              onClick={() => {
+                setShowCustomPresetForm(false);
+                setNewPresetFrom('');
+                setNewPresetTo('');
+              }}
+              className="px-4 py-2 rounded bg-slate-700/50 border border-slate-600 text-slate-400 hover:bg-slate-600/70 transition-all text-sm font-semibold"
+            >
+              Отмена
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Attempt visibility controls */}
       {accelerationAttempts.length > 0 && (
@@ -326,7 +439,7 @@ export const AccelerationTab = memo(({
               const color = ATTEMPT_COLORS[originalIndex % ATTEMPT_COLORS.length];
               
               // Get selected presets that match this attempt
-              const matchingPresets = PRESETS.filter(preset => 
+              const matchingPresets = allPresets.filter(preset => 
                 preset.id !== 'custom' && 
                 selectedPresets.has(preset.id) &&
                 attempt.thresholdPair.to >= preset.to && 
