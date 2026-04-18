@@ -107,6 +107,12 @@ export const AccelerationTab = memo(({
       pointRadius: number;
     }> = [];
 
+    console.log('Chart data generation:', {
+      selectedPresets: Array.from(selectedPresets),
+      accelerationAttemptsCount: accelerationAttempts.length,
+      accelerationAttempts: accelerationAttempts.map(a => ({ id: a.id, threshold: `${a.thresholdPair.from}-${a.thresholdPair.to}` })),
+    });
+
     selectedPresets.forEach(presetId => {
       const preset = PRESETS.find(p => p.id === presetId);
       if (!preset || preset.id === 'custom') return;
@@ -167,6 +173,10 @@ export const AccelerationTab = memo(({
     }
 
     // Return empty datasets array if no data (Chart.js requires at least empty datasets)
+    console.log('Chart datasets result:', {
+      datasetsCount: datasets.length,
+      datasets: datasets.map(d => ({ label: d.label, dataPoints: d.data.length })),
+    });
     return { datasets: datasets.length > 0 ? datasets : [] };
   }, [accelerationAttempts, selectedPresets, data, visibleAttempts]);
 
@@ -359,12 +369,16 @@ export const AccelerationTab = memo(({
           timeRange={timeRange}
           timelineMarkers={accelerationAttempts
             .filter(a => visibleAttempts.has(a.id))
-            .map((attempt, index) => ({
-              id: attempt.id,
-              position: (attempt.time - timeRange.start) / (timeRange.end - timeRange.start),
-              color: ATTEMPT_COLORS[index % ATTEMPT_COLORS.length],
-              label: `Попытка #${index + 1}: ${attempt.time.toFixed(2)}с`,
-            }))}
+            .map((attempt) => {
+              // Find original index for consistent colors
+              const originalIndex = accelerationAttempts.findIndex(a => a.id === attempt.id);
+              return {
+                id: attempt.id,
+                position: (attempt.time - timeRange.start) / (timeRange.end - timeRange.start),
+                color: ATTEMPT_COLORS[originalIndex % ATTEMPT_COLORS.length],
+                label: `Попытка #${originalIndex + 1}: ${attempt.time.toFixed(2)}с`,
+              };
+            })}
           timelineLabel="Шкала времени"
           enableMeasurement={true}
         />

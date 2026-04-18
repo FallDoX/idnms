@@ -25,8 +25,9 @@ export const AccelerationComparison = memo(({
   data,
 }: AccelerationComparisonProps) => {
   const [comparisonFilter, setComparisonFilter] = useState<'all' | 'best' | 'worst'>('all');
-  const [showPowerCurve, setShowPowerCurve] = useState(false);
   const [filterLimit, setFilterLimit] = useState(5);
+  // Power curve feature disabled
+  const showPowerCurve = false;
 
   const selectedAttemptObjects = useMemo(() => {
     return accelerationAttempts.filter(a => selectedAttempts.has(a.id));
@@ -259,18 +260,6 @@ export const AccelerationComparison = memo(({
               {filter === 'all' ? 'Все' : filter === 'best' ? `Лучшие ${filterLimit}` : `Худшие ${filterLimit}`}
             </button>
           ))}
-          <button
-            onClick={() => setShowPowerCurve(!showPowerCurve)}
-            aria-pressed={showPowerCurve}
-            aria-label={showPowerCurve ? 'Скрыть график мощности' : 'Показать график мощности'}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
-              showPowerCurve
-                ? 'bg-green-500/20 border-green-500/50 text-green-300'
-                : 'bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-600/70'
-            }`}
-          >
-            Мощность
-          </button>
           <div className="flex items-center gap-2 ml-2">
             <label htmlFor="filter-limit" className="text-xs text-slate-400">Лимит:</label>
             <input
