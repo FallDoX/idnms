@@ -11,13 +11,11 @@ interface AccelerationTabProps {
 // WindFighter Unified Color Palette (6 core colors)
 // primary: #3b82f6, success: #10b981, warning: #f59e0b, danger: #ef4444, info: #8b5cf6, accent: #06b6d4
 const PRESET_COLORS = {
-  'custom': '#8b5cf6', // info for "All" preset
-};
-
-// Generate colors dynamically for presets based on index
-const getPresetColor = (index: number) => {
-  const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#f97316', '#06b6d4'];
-  return colors[index % colors.length];
+  '0-25': '#3b82f6',   // primary
+  '0-60': '#10b981',   // success
+  '0-90': '#f59e0b',   // warning
+  '0-100': '#ef4444',  // danger
+  'custom': '#8b5cf6', // info
 };
 
 const ATTEMPT_COLORS = [
@@ -25,42 +23,19 @@ const ATTEMPT_COLORS = [
   '#ec4899', '#f97316', '#06b6d4', '#a78bfa', '#fb923c'  // Extended for multiple attempts
 ];
 
-// Generate presets dynamically based on actual acceleration attempts
-const generatePresets = (attempts: AccelerationAttempt[]) => {
-  // Get unique threshold pairs from attempts
-  const uniquePairs = new Map<string, { from: number; to: number }>();
-  attempts.forEach(attempt => {
-    const key = `${attempt.thresholdPair.from}-${attempt.thresholdPair.to}`;
-    uniquePairs.set(key, attempt.thresholdPair);
-  });
-
-  // Create presets from unique pairs
-  const presets = Array.from(uniquePairs.entries()).map(([, pair], index) => ({
-    id: `preset-${index}`,
-    from: pair.from,
-    to: pair.to,
-    label: `${pair.from}-${pair.to}`
-  }));
-
-  // Add "All" preset
-  presets.push({
-    id: 'custom',
-    from: -1,
-    to: -1,
-    label: 'Все'
-  });
-
-  return presets;
-};
+const PRESETS = [
+  { id: '0-25', from: 0, to: 25, label: '0-25' },
+  { id: '0-60', from: 0, to: 60, label: '0-60' },
+  { id: '0-90', from: 0, to: 90, label: '0-90' },
+  { id: '0-100', from: 0, to: 100, label: '0-100' },
+  { id: 'custom', from: -1, to: -1, label: 'Все' },
+];
 
 export const AccelerationTab = memo(({
   accelerationAttempts,
   data,
   clearSettings,
 }: AccelerationTabProps) => {
-  // Generate dynamic presets based on actual acceleration attempts
-  const PRESETS = useMemo(() => generatePresets(accelerationAttempts), [accelerationAttempts]);
-
   const [selectedPresets, setSelectedPresets] = useState<Set<string>>(new Set());
 
   // Visibility state for individual attempts
@@ -136,9 +111,9 @@ export const AccelerationTab = memo(({
       const preset = PRESETS.find(p => p.id === presetId);
       if (!preset || preset.id === 'custom') return;
 
-      // Filter attempts that match the preset threshold pair
+      // Filter attempts that fall within the preset speed range
       const presetAttempts = accelerationAttempts.filter(
-        attempt => Math.abs(attempt.thresholdPair.from - preset.from) < 1 && Math.abs(attempt.thresholdPair.to - preset.to) < 1
+        attempt => attempt.thresholdPair.to <= preset.to && attempt.thresholdPair.from === preset.from
       );
 
       presetAttempts.forEach((attempt, index) => {
@@ -150,13 +125,11 @@ export const AccelerationTab = memo(({
         );
 
         if (attemptData.length > 0) {
-          const presetIndex = PRESETS.findIndex(p => p.id === preset.id);
-          const color = preset.id === 'custom' ? PRESET_COLORS.custom : getPresetColor(presetIndex);
           datasets.push({
             label: `${preset.label} #${index + 1} (${attempt.time.toFixed(2)}с, ${attempt.distance.toFixed(1)}м)`,
             data: attemptData.map(e => ({ x: (e.timestamp - attempt.startTimestamp) / 1000, y: e.Speed })),
-            borderColor: color,
-            backgroundColor: `${color}33`,
+            borderColor: PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS],
+            backgroundColor: `${PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS]}33`,
             fill: false,
             tension: 0.1,
             pointRadius: 0,
@@ -278,19 +251,17 @@ export const AccelerationTab = memo(({
       {/* Preset selector */}
       <div className="flex items-center justify-center gap-2 flex-wrap">
         <div className="flex flex-wrap gap-2 md:gap-3 justify-center">
-          {PRESETS.map((preset, presetIndex) => {
+          {PRESETS.map((preset) => {
             const attemptCount = preset.id === 'custom'
               ? accelerationAttempts.length
               : accelerationAttempts.filter(
-                  attempt => Math.abs(attempt.thresholdPair.from - preset.from) < 1 && Math.abs(attempt.thresholdPair.to - preset.to) < 1
+                  attempt => attempt.thresholdPair.to <= preset.to && attempt.thresholdPair.from === preset.from
                 ).length;
 
             // Debug: log attempt counts
             console.log(`Preset ${preset.label}: attemptCount=${attemptCount}`, preset.id === 'custom' ? '(all)' : accelerationAttempts.filter(
-              attempt => Math.abs(attempt.thresholdPair.from - preset.from) < 1 && Math.abs(attempt.thresholdPair.to - preset.to) < 1
+              attempt => attempt.thresholdPair.to <= preset.to && attempt.thresholdPair.from === preset.from
             ));
-
-            const presetColor = preset.id === 'custom' ? PRESET_COLORS.custom : getPresetColor(presetIndex);
 
             return (
               <button
@@ -300,7 +271,7 @@ export const AccelerationTab = memo(({
                 title={`Разгон ${preset.label} км/ч. ${attemptCount > 0 ? `Найдено попыток: ${attemptCount}` : 'Нет попыток'}`}
                 className={`px-3 py-2 md:px-4 md:py-2.5 rounded-lg text-xs md:text-sm font-semibold transition-all border relative shadow-sm min-h-[44px] ${
                   selectedPresets.has(preset.id)
-                    ? `${presetColor}20 border ${presetColor}60 text-white shadow-lg`
+                    ? `${PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS]}20 border ${PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS]}60 text-white shadow-lg shadow-${PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS]}/20`
                     : 'bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-600/70 hover:border-slate-500'
                 }`}
               >
