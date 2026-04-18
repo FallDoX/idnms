@@ -23,7 +23,7 @@ progress:
 
 ## Completed Work
 
-**Initialization (Phase 0):**
+**Project Initialization:**
 
 - ✓ PROJECT.md created
 - ✓ REQUIREMENTS.md created
@@ -116,12 +116,8 @@ progress:
 - ✓ Phase 11: Polish and Documentation (partial - 4/8 plans)
 - ⏸️ Phase 8: Chart Zoom Unification (deferred)
 - ⏸️ Phase 12: Testing and Validation (deferred)
-- ✗ Phase 9: G-Force Estimation (skipped per user request)
-- ✗ Phase 10: Multi-Trip Comparison (skipped per user request)
 
 See [MILESTONE-v1.0-SUMMARY.md](MILESTONE-v1.0-SUMMARY.md) for details.
-
-**Initialization (Phase 0):**
 
 ## Project Context
 

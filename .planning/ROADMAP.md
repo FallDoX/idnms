@@ -140,38 +140,6 @@ See [MILESTONE-v1.0-SUMMARY.md](MILESTONE-v1.0-SUMMARY.md) for details.
 
 **Requirements:** Performance improvement
 
-## Phase 9: G-Force Estimation
-
-**Goal:** Add G-force estimation for acceleration attempts.
-
-**Plans:**
-- 9.1 Implement G-force calculation algorithm
-- 9.2 Add G-force smoothing
-- 9.3 Add G-force visualization
-- 9.4 Add G-force thresholds
-- 9.5 Add G-force alerts
-- 9.6 Update table with G-force metrics
-- 9.7 Add G-force filtering
-- 9.8 Add G-force comparison
-
-**Requirements:** Advanced feature
-
-## Phase 10: Multi-Trip Comparison
-
-**Goal:** Add comparison across different trips/files.
-
-**Plans:**
-- 10.1 Add multi-file upload support
-- 10.2 Implement trip selection UI
-- 10.3 Add cross-trip acceleration comparison
-- 10.4 Add trip-level statistics
-- 10.5 Add trip filtering
-- 10.6 Add trip comparison export
-- 10.7 Add trip metadata display
-- 10.8 Add trip comparison history
-
-**Requirements:** REQ-047, REQ-048
-
 ## Phase 8: Chart Zoom Unification
 
 **Goal:** Unify zoom behavior across all charts, resolve plugin conflicts.
@@ -222,7 +190,7 @@ See [MILESTONE-v1.0-SUMMARY.md](MILESTONE-v1.0-SUMMARY.md) for details.
 
 ---
 
-**Total Phases:** 12
+**Total Phases:** 10
 **Granularity:** Fine (8-12 phases, 5-10 plans each)
 **Execution:** Parallel (independent plans run simultaneously)
 

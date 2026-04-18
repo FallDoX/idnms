@@ -6,7 +6,9 @@
 
 A cross-platform web-based tool for analyzing trip telemetry from CSV logs. Works on Windows, macOS, and Linux in any browser. The application processes CSV files locally in the browser, displays interactive charts, and provides trip statistics without server-side processing.
 
-**Core Value:** Fast, private trip log analysis - all data stays in the user's browser, no server uploads.
+## Core Value
+
+Fast, private trip log analysis - all data stays in the user's browser, no server uploads.
 
 ## Context
 
