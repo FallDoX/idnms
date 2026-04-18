@@ -95,7 +95,6 @@ export const AccelerationTab = memo(({
     }
 
     const timeRange = maxDuration > 0 ? { start: 0, end: maxDuration } : null;
-    console.log('timeRange calculated:', { maxDuration, timeRange, selectedPresets: Array.from(selectedPresets) });
     return timeRange;
   }, [accelerationAttempts, selectedPresets, PRESETS]);
 
@@ -110,23 +109,14 @@ export const AccelerationTab = memo(({
       pointRadius: number;
     }> = [];
 
-    console.log('Chart data generation:', {
-      selectedPresets: Array.from(selectedPresets),
-      accelerationAttemptsCount: accelerationAttempts.length,
-      accelerationAttempts: accelerationAttempts.map(a => ({ id: a.id, threshold: `${a.thresholdPair.from}-${a.thresholdPair.to}` })),
-      visibleAttempts: Array.from(visibleAttempts),
-    });
-
     selectedPresets.forEach(presetId => {
       const preset = PRESETS.find(p => p.id === presetId);
-      console.log('Processing preset:', presetId, preset);
       if (!preset || preset.id === 'custom') return;
 
       // Filter attempts that reach at least the preset target speed
       const presetAttempts = accelerationAttempts.filter(
         attempt => attempt.thresholdPair.to >= preset.to && attempt.thresholdPair.from === preset.from
       );
-      console.log(`Preset ${preset.label} matches:`, presetAttempts.length, presetAttempts.map(a => ({id: a.id, threshold: `${a.thresholdPair.from}-${a.thresholdPair.to}`})));
 
       presetAttempts.forEach((attempt, index) => {
         // Skip if attempt is hidden
@@ -135,12 +125,6 @@ export const AccelerationTab = memo(({
         const attemptData = data.filter(
           e => e.timestamp >= attempt.startTimestamp && e.timestamp <= attempt.endTimestamp
         );
-
-        console.log(`Attempt ${attempt.id} data points:`, attemptData.length, {
-          startTimestamp: attempt.startTimestamp,
-          endTimestamp: attempt.endTimestamp,
-          dataRange: attemptData.length > 0 ? { first: attemptData[0].timestamp, last: attemptData[attemptData.length - 1].timestamp } : null,
-        });
 
         if (attemptData.length > 0) {
           // Find the original index of this attempt to use consistent colors
@@ -157,13 +141,6 @@ export const AccelerationTab = memo(({
             }
           }
           
-          console.log(`Dataset for attempt ${attempt.id}:`, {
-            label: `${preset.label} #${index + 1}`,
-            dataPoints: chartData.length,
-            firstPoint: chartData[0],
-            lastPoint: chartData[chartData.length - 1],
-            truncatedTo: preset.to > 0 ? preset.to : 'full',
-          });
           datasets.push({
             label: `${preset.label} #${index + 1} (${attempt.time.toFixed(2)}с, ${attempt.distance.toFixed(1)}м)`,
             data: chartData,
@@ -347,26 +324,13 @@ export const AccelerationTab = memo(({
               // Use original index to match colors with chart lines
               const originalIndex = accelerationAttempts.findIndex(a => a.id === attempt.id);
               const color = ATTEMPT_COLORS[originalIndex % ATTEMPT_COLORS.length];
-              
-              // Determine which presets this attempt belongs to
-              const matchingPresets = PRESETS.filter(preset => 
-                preset.id !== 'custom' && 
-                attempt.thresholdPair.to >= preset.to && 
-                attempt.thresholdPair.from === preset.from
-              );
-              
-              // Get colors of selected presets that match this attempt
-              const selectedPresetColors = matchingPresets
-                .filter(p => selectedPresets.has(p.id))
-                .map(p => PRESET_COLORS[p.id as keyof typeof PRESET_COLORS]);
-
               return (
                 <button
                   key={attempt.id}
                   onClick={() => toggleAttemptVisibility(attempt.id)}
                   aria-pressed={isVisible}
                   aria-label={`Попытка #${sortedIndex + 1}: ${attempt.thresholdPair.from}-${attempt.thresholdPair.to} км/ч, ${attempt.time.toFixed(2)}с. ${isVisible ? 'Скрыть' : 'Показать'}`}
-                  className="flex flex-col items-center justify-center px-2 py-1.5 md:px-3 md:py-2 rounded text-[10px] md:text-xs font-semibold transition-all border min-w-[45px] md:min-w-[55px] min-h-[44px] relative"
+                  className="flex flex-col items-center justify-center px-2 py-1.5 md:px-3 md:py-2 rounded text-[10px] md:text-xs font-semibold transition-all border min-w-[45px] md:min-w-[55px] min-h-[44px]"
                   style={{
                     backgroundColor: isVisible ? `${color}30` : 'rgba(30, 41, 59, 0.3)',
                     borderColor: isVisible ? color : 'rgba(71, 85, 105, 0.5)',
@@ -378,18 +342,6 @@ export const AccelerationTab = memo(({
                   <span className="font-bold text-xs">#{sortedIndex + 1}</span>
                   <span className="text-[9px] opacity-90">{attempt.thresholdPair.to} км/ч</span>
                   <span className="text-[9px] opacity-75">{attempt.time.toFixed(2)}с</span>
-                  {/* Preset indicators */}
-                  {selectedPresetColors.length > 0 && (
-                    <div className="absolute -top-1 -right-1 flex gap-0.5">
-                      {selectedPresetColors.slice(0, 3).map((pColor, i) => (
-                        <div
-                          key={i}
-                          className="w-2 h-2 rounded-full"
-                          style={{ backgroundColor: pColor }}
-                        />
-                      ))}
-                    </div>
-                  )}
                 </button>
               );
             })}
