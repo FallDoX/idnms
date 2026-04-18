@@ -250,7 +250,7 @@ export const AccelerationTab = memo(({
 
       {/* Preset selector */}
       <div className="flex items-center justify-center gap-2 flex-wrap">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 md:gap-3 justify-center">
           {PRESETS.map((preset) => {
             const attemptCount = preset.id === 'custom'
               ? accelerationAttempts.length
@@ -258,13 +258,18 @@ export const AccelerationTab = memo(({
                   attempt => Math.abs(attempt.thresholdPair.from - preset.from) < 1 && Math.abs(attempt.thresholdPair.to - preset.to) < 1
                 ).length;
 
+            // Debug: log attempt counts
+            console.log(`Preset ${preset.label}: attemptCount=${attemptCount}`, preset.id === 'custom' ? '(all)' : accelerationAttempts.filter(
+              attempt => Math.abs(attempt.thresholdPair.from - preset.from) < 1 && Math.abs(attempt.thresholdPair.to - preset.to) < 1
+            ));
+
             return (
               <button
                 key={preset.id}
                 onClick={() => togglePreset(preset.id)}
                 aria-pressed={selectedPresets.has(preset.id)}
                 title={`Разгон ${preset.label} км/ч. ${attemptCount > 0 ? `Найдено попыток: ${attemptCount}` : 'Нет попыток'}`}
-                className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all border relative shadow-sm ${
+                className={`px-3 py-2 md:px-4 md:py-2.5 rounded-lg text-xs md:text-sm font-semibold transition-all border relative shadow-sm min-h-[44px] ${
                   selectedPresets.has(preset.id)
                     ? `${PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS]}20 border ${PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS]}60 text-white shadow-lg shadow-${PRESET_COLORS[preset.id as keyof typeof PRESET_COLORS]}/20`
                     : 'bg-slate-700/50 border-slate-600 text-slate-400 hover:bg-slate-600/70 hover:border-slate-500'
@@ -297,7 +302,7 @@ export const AccelerationTab = memo(({
       {accelerationAttempts.length > 0 && (
         <div className="space-y-3">
           {/* Individual attempt toggles with matching colors - sorted by time (best first) */}
-          <div className="flex items-center justify-center gap-2 flex-wrap">
+          <div className="flex items-center justify-center gap-1 md:gap-2 flex-wrap">
             <span className="text-xs text-slate-400 mr-1">Попытки:</span>
             {[...accelerationAttempts].sort((a, b) => a.time - b.time).map((attempt, sortedIndex) => {
               const isVisible = visibleAttempts.has(attempt.id);
@@ -310,7 +315,7 @@ export const AccelerationTab = memo(({
                   onClick={() => toggleAttemptVisibility(attempt.id)}
                   aria-pressed={isVisible}
                   aria-label={`Попытка #${sortedIndex + 1}: ${attempt.thresholdPair.from}-${attempt.thresholdPair.to} км/ч, ${attempt.time.toFixed(2)}с. ${isVisible ? 'Скрыть' : 'Показать'}`}
-                  className="flex flex-col items-center justify-center px-2 py-1.5 rounded text-[10px] font-semibold transition-all border min-w-[50px]"
+                  className="flex flex-col items-center justify-center px-2 py-1.5 md:px-3 md:py-2 rounded text-[10px] md:text-xs font-semibold transition-all border min-w-[45px] md:min-w-[55px] min-h-[44px]"
                   style={{
                     backgroundColor: isVisible ? `${color}30` : 'rgba(30, 41, 59, 0.3)',
                     borderColor: isVisible ? color : 'rgba(71, 85, 105, 0.5)',
